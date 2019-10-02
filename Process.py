@@ -7,7 +7,8 @@ from PIL import Image, ImageFilter
 
 
 def get_tomorrow_date():
-    return str(pendulum.tomorrow().date().__format__('DD.MM.YYYY'))
+    # return str(pendulum.tomorrow().date().__format__('DD.MM.YYYY'))
+    return str(pendulum.date(2019, 10, 1).__format__('DD.MM.YYYY'))
 
 
 def get_picture():
@@ -86,6 +87,7 @@ class ScheduleFlow:
                 threshold -= 0.0008
             else:
                 cond = True
+        print(x, y)
         return x, y
 
     # Функция поиска левой, верхней, правой и нижней координаты класса
@@ -137,8 +139,8 @@ class ScheduleFlow:
         lit = class_name[-1]
         num = class_name[:-1]
         crop_lit = {'A': 0, 'B': 280, 'V': 560, 'G': 840}
-        crop_num = {'5': 0, '6': 180, '7': 180 * 2, '8': 180 * 3, '9': 180 * 4, '10': 180 * 5,
-                    '11': 180 * 6, }
+        crop_num = {'5': 0, '6': 180, '7': int(180 * 2.1), '8': int(180 * 3.1), '9': int(180 * 4.1),
+                    '10': int(180 * 5.25), '11': int(180 * 6.4)}
         crop_x = 400
         if class_name not in ['5G', '11A', '11B', '11V', '11G']:
             crop_y = 280
@@ -150,6 +152,7 @@ class ScheduleFlow:
         y1 = int(y0 + crop_y)
         tmp = self.img.crop((x0, y0, x1, y1))
         tmp.save(self.name)
+        tmp.save(class_name + '1111' + '.jpg')
 
 
 if __name__ == '__main__':
@@ -165,14 +168,23 @@ if __name__ == '__main__':
                 if i in [5, 10, 11]:
                     for j in range(4):
                         cl = str(i) + o[j]
-                        ScheduleFlow(cl, cl)
+                        try:
+                            ScheduleFlow(cl, cl)
+                        except:
+                            print('Ошибка', end=' ')
                         print(cl)
                 else:
                     for j in range(3):
                         cl = str(i) + o[j]
-                        ScheduleFlow(cl, cl)
+                        try:
+                            ScheduleFlow(cl, cl)
+                        except:
+                            print('Ошибка', end=' ')
                         print(cl)
     elif c[:-1] in '567891011' and c[-1] in 'АБВГ':
-        ScheduleFlow(c, c)
+        try:
+            ScheduleFlow(c, c)
+        except:
+            print('Ошибка')
     else:
         print('Ошибка! такого класса не существует!')
