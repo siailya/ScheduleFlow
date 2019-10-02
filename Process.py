@@ -2,14 +2,16 @@ import cv2
 import numpy as np
 import pendulum
 import requests
+from os import remove, mkdir, path
 from PIL import Image, ImageFilter
 
-def get_today_date():
+
+def get_tomorrow_date():
     return str(pendulum.tomorrow().date().__format__('DD.MM.YYYY'))
 
 
 def get_picture():
-    date = get_today_date()
+    date = get_tomorrow_date()
     url = 'http://school37.com/news/data/upimages/' + date + '-001.png'
     p = requests.get(url)
     out = open(str(date) + ".png", "wb")
@@ -26,15 +28,18 @@ class ScheduleFlow:
                      'В': 'V',
                      'Г': 'G'}
             name = name[:-1] + trans[name[-1]]
-            self.name = get_today_date() + '.png'
+            self.name = get_tomorrow_date() + '.png'
             get_picture()
-            # Открытие в OpenCV для поика шаблона
-            self.img_rgb = cv2.imread(self.name)
-            self.img_gray = cv2.cvtColor(self.img_rgb, cv2.COLOR_BGR2GRAY)
-
             self.img = Image.open(self.name)  # Открытие в PIL
             self.img.convert('RGB')
             self.color = (0, 0, 0)
+
+            self.crop_for_class(name)
+            self.img = Image.open(self.name)
+
+            # Открытие в OpenCV для поика шаблона
+            self.img_rgb = cv2.imread(self.name)
+            self.img_gray = cv2.cvtColor(self.img_rgb, cv2.COLOR_BGR2GRAY)
 
             t_name = 'labels/' + name + '.jpg'
             template = Image.open(t_name)
@@ -48,8 +53,9 @@ class ScheduleFlow:
 
             self.res = class_schedule.resize(
                 (int(w * 2), int(h * 2)), Image.ANTIALIAS).filter(ImageFilter.SHARPEN)
-            sname = save_name + '.jpg'
-            self.res.save(sname)
+            s_name = get_tomorrow_date() + '/' + save_name + '.jpg'
+            self.res.save(s_name)
+            remove(self.name)
 
     # Функция для поика надписи класса
     # Брутфорс - потому что ищется грубым перебором
@@ -127,12 +133,32 @@ class ScheduleFlow:
 
         return tuple([crop_x0, crop_y0, crop_x1, crop_y1])
 
+    def crop_for_class(self, class_name):
+        lit = class_name[-1]
+        num = class_name[:-1]
+        crop_lit = {'A': 0, 'B': 280, 'V': 560, 'G': 840}
+        crop_num = {'5': 0, '6': 180, '7': 180 * 2, '8': 180 * 3, '9': 180 * 4, '10': 180 * 5,
+                    '11': 180 * 6, }
+        crop_x = 400
+        if class_name not in ['5G', '11A', '11B', '11V', '11G']:
+            crop_y = 280
+        else:
+            crop_y = 450
+        x0 = int(crop_lit[lit])
+        x1 = int(x0 + crop_x)
+        y0 = int(175 + crop_num[num])
+        y1 = int(y0 + crop_y)
+        tmp = self.img.crop((x0, y0, x1, y1))
+        tmp.save(self.name)
+
 
 if __name__ == '__main__':
+    if not path.exists(get_tomorrow_date()):
+        mkdir(get_tomorrow_date())
     c = input('Введите номер класса, либо команду "all" для загрузки всех расписаний\n')
     if c == 'all':
         a = input(
-            'Вы хотите сохранить расписания всех классов в текущую директорию? y/n\n')
+            f'Вы хотите сохранить расписания всех классов в директорию "{get_tomorrow_date()}" y/n\n')
         if a == 'y':
             o = ['А', 'Б', 'В', 'Г']
             for i in range(5, 12):
