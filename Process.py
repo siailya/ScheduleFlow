@@ -1,14 +1,14 @@
+from os import remove, mkdir, path
+
 import cv2
 import numpy as np
 import pendulum
 import requests
-from os import remove, mkdir, path
 from PIL import Image, ImageFilter
 
 
 def get_tomorrow_date():
-    # return str(pendulum.tomorrow().date().__format__('DD.MM.YYYY'))
-    return str(pendulum.date(2019, 10, 1).__format__('DD.MM.YYYY'))
+    return str(pendulum.tomorrow().date().__format__('DD.MM.YYYY'))
 
 
 def get_picture():
@@ -65,7 +65,7 @@ class ScheduleFlow:
         # Поиск координат класса по шаблону
         # Код самого Темплейт-метчинга я где-то нашел, но тут 1 строка
         cond = False
-        threshold = 1  # Максимальная точность. Но найросеть в принципе не выдает 100-процентную
+        threshold = 0.7  # Максимальная точность. Но найросеть в принципе не выдает 100-процентную
         # точность, поэтому будем уменьшать ее:
         # Открытие самого шаблона, по которому ищем класс
         template = cv2.imread(template_name, 0)
@@ -84,9 +84,10 @@ class ScheduleFlow:
                 x, y = tuple(coord)
             except IndexError:  # Если подходящих значений не оказалось, уменьшаем и прокручиваем
                 # опять
-                threshold -= 0.0008
+                threshold -= 0.1
             else:
-                cond = True
+                if y < 50:
+                    cond = True
         print(x, y)
         return x, y
 
@@ -152,7 +153,6 @@ class ScheduleFlow:
         y1 = int(y0 + crop_y)
         tmp = self.img.crop((x0, y0, x1, y1))
         tmp.save(self.name)
-        tmp.save(class_name + '1111' + '.jpg')
 
 
 if __name__ == '__main__':
