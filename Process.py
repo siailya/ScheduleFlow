@@ -4,7 +4,6 @@ import pendulum
 import requests
 from PIL import Image, ImageFilter
 
-
 def get_today_date():
     return str(pendulum.tomorrow().date().__format__('DD.MM.YYYY'))
 
@@ -78,7 +77,7 @@ class ScheduleFlow:
                 x, y = tuple(coord)
             except IndexError:  # Если подходящих значений не оказалось, уменьшаем и прокручиваем
                 # опять
-                threshold -= 0.0005
+                threshold -= 0.0008
             else:
                 cond = True
         return x, y
@@ -97,7 +96,7 @@ class ScheduleFlow:
             while color != self.color:
                 y += 1
                 color = self.img.getpixel((x, y))
-            crop_y1 = y
+            crop_y1 = y - 20
         # Для нижних
         else:
             delta_y = self.y + 240
@@ -115,7 +114,7 @@ class ScheduleFlow:
         while color == self.color:
             x -= 1
             color = self.img.getpixel((x, y))
-        crop_x0 = x - 1
+        crop_x0 = x
 
         # Поиск правой точки:
         delta_x2 = self.x + self.template_w
@@ -130,10 +129,10 @@ class ScheduleFlow:
 
 
 if __name__ == '__main__':
-    c = input('Введите номер класса')
+    c = input('Введите номер класса, либо команду "all" для загрузки всех расписаний\n')
     if c == 'all':
         a = input(
-            'Вы хотите сохранить расписания всех классов в текущую директорию? y/n')
+            'Вы хотите сохранить расписания всех классов в текущую директорию? y/n\n')
         if a == 'y':
             o = ['А', 'Б', 'В', 'Г']
             for i in range(5, 12):
@@ -141,10 +140,12 @@ if __name__ == '__main__':
                     for j in range(4):
                         cl = str(i) + o[j]
                         ScheduleFlow(cl, cl)
+                        print(cl)
                 else:
                     for j in range(3):
                         cl = str(i) + o[j]
                         ScheduleFlow(cl, cl)
+                        print(cl)
     elif c[:-1] in '567891011' and c[-1] in 'АБВГ':
         ScheduleFlow(c, c)
     else:
