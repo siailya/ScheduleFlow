@@ -1,4 +1,3 @@
-from os import path
 from random import randint
 
 import vk_api.vk_api
