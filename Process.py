@@ -65,13 +65,10 @@ class ScheduleFlow:
         # Поиск координат класса по шаблону
         # Код самого Темплейт-метчинга я где-то нашел, но тут 1 строка
         cond = False
-        threshold = 0.7  # Максимальная точность. Но найросеть в принципе не выдает 100-процентную
-        # точность, поэтому будем уменьшать ее:
+        threshold = 0.7
         # Открытие самого шаблона, по которому ищем класс
         template = cv2.imread(template_name, 0)
-        # Последовательно уменьшаю threshold по 0,0005 (около
         while not cond and threshold > 0:
-            # 0,005%, поэтому итераций очень много)
             try:
                 res = cv2.matchTemplate(
                     self.img_gray, template, cv2.TM_CCOEFF_NORMED)
@@ -86,9 +83,9 @@ class ScheduleFlow:
                 # опять
                 threshold -= 0.1
             else:
-                if y < 50:
+                if y < 70:
                     cond = True
-        print(x, y)
+        # print(f'y = {y}', end='; ')
         return x, y
 
     # Функция поиска левой, верхней, правой и нижней координаты класса
