@@ -152,36 +152,36 @@ class ScheduleFlow:
         tmp.save(self.name)
 
 
-if __name__ == '__main__':
+def SF(cls='all'):
     if not path.exists(get_tomorrow_date()):
         mkdir(get_tomorrow_date())
-    c = input('Введите номер класса, либо команду "all" для загрузки всех расписаний\n')
-    if c == 'all':
-        a = input(
-            f'Вы хотите сохранить расписания всех классов в директорию "{get_tomorrow_date()}" y/n\n')
-        if a == 'y':
-            o = ['А', 'Б', 'В', 'Г']
-            for i in range(5, 12):
-                if i in [5, 10, 11]:
-                    for j in range(4):
-                        cl = str(i) + o[j]
-                        try:
-                            ScheduleFlow(cl, cl)
-                        except:
-                            print('Ошибка', end=' ')
-                        print(cl)
-                else:
-                    for j in range(3):
-                        cl = str(i) + o[j]
-                        try:
-                            ScheduleFlow(cl, cl)
-                        except:
-                            print('Ошибка', end=' ')
-                        print(cl)
-    elif c[:-1] in '567891011' and c[-1] in 'АБВГ':
+    if cls == 'all':
+        o = ['А', 'Б', 'В', 'Г']
+        for i in range(5, 12):
+            if i in [5, 10, 11]:
+                for j in range(4):
+                    cl = str(i) + o[j]
+                    try:
+                        ScheduleFlow(cl, cl)
+                    except:
+                        print('Ошибка', end=' ')
+                    print(cl)
+            else:
+                for j in range(3):
+                    cl = str(i) + o[j]
+                    try:
+                        ScheduleFlow(cl, cl)
+                    except:
+                        print('Ошибка', end=' ')
+                    print(cl)
+    elif cls[:-1] in '567891011' and cls[-1] in 'АБВГ':
         try:
-            ScheduleFlow(c, c)
+            ScheduleFlow(cls, cls)
         except:
             print('Ошибка')
     else:
         print('Ошибка! такого класса не существует!')
+
+
+if __name__ == '__main__':
+    SF()

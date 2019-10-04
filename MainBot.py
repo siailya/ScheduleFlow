@@ -9,7 +9,7 @@ from Process import *
 class Bot:
     def __init__(self):
         self.vk = vk_api.VkApi(
-            token='')
+            token='e6c8aa32f8b60fd357f2253defbee0416646b7aecea0c4caee2156c8041bf041afe691770b9975a14eb69')
         self.long_poll = VkBotLongPoll(self.vk, group_id='187161295')
         self.vk_api = self.vk.get_api()
 
@@ -32,18 +32,16 @@ class Bot:
                 self.inbox(event)
 
     def inbox(self, event):
-        msg = event.obj.text
-        print(msg)
+        msg = event.obj.text.replace(' ', '').replace('"', '').upper()
         date = get_tomorrow_date()
-        print(f'{date}/{msg.upper()}.jpg')
         if (msg[-1] in 'АБВГабвг') and (msg[:-1] in '567891011'):
-            if path.exists(f'{date}/{msg.upper()}.jpg'):
+            if path.exists(f'{date}/{msg}.jpg'):
+                self.photo(event.obj.peer_id, f'{date}/{msg.upper()}.jpg')
+            else:
+                self.send_msg(event.obj.peer_id, 'Сейчас все будет. Скачиваю и режу расписание')
+                SF()
                 self.photo(event.obj.peer_id, f'{date}/{msg.upper()}.jpg')
 
 
 if __name__ == "__main__":
-    while True:
-        try:
-            Bot().main()
-        except:
-            print('Ошибка')
+    Bot().main()
