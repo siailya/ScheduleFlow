@@ -12,16 +12,13 @@ class Bot:
             token='e6c8aa32f8b60fd357f2253defbee0416646b7aecea0c4caee2156c8041bf041afe691770b9975a14eb69')
         self.long_poll = VkBotLongPoll(self.vk, group_id='187161295')
         self.vk_api = self.vk.get_api()
+        self.upload = vk_api.VkUpload(self.vk)
 
     def photo(self, send_id, root='img.jpg'):
-        request = requests.post(self.vk_api.photos.getMessagesUploadServer()['upload_url'],
-                                files={'photo': open(root, 'rb')}).json()
-        save_photo = \
-        self.vk_api.photos.saveMessagesPhoto(photo=request['photo'], server=request['server'],
-                                             hash=request['hash'])[0]
-        photo = f'photo{save_photo["owner_id"]}_{save_photo["id"]}'
+        response = self.upload.photo_messages(root)[0]
+        attachment = f'photo{response["owner_id"]}_{response["id"]}_{response["access_key"]}'
         self.vk_api.messages.send(peer_id=send_id, message='',
-                                  random_id=randint(-1000, 1000), attachment=photo)
+                                  random_id=randint(-1000, 1000), attachment=attachment)
 
     def send_msg(self, send_id, message):
         self.vk_api.messages.send(
@@ -47,6 +44,7 @@ class Bot:
             self.send_msg(event.obj.peer_id, 'Такого класса не существует!\nПри вводе класса '
                                              'используйте только цифры и кириллицу!\nНапример - '
                                              '11А, 9"В", 10 Г')
+
 
 if __name__ == "__main__":
     Bot().main()
