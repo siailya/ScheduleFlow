@@ -33,7 +33,7 @@ class Bot:
         msg = event.obj.text.replace(' ', '').replace('"', '').upper()
         date = get_tomorrow_date()
         if msg in ['5А', '5Б', '5В', '5Г', '6А', '6Б', '6В', '7А', '7Б', '7В', '8А', '8Б', '8В',
-                   '9А', '9Б', '9В', '10А', '810Б', '10В', '10Г', '11А', '11Б', '11В', '11Г']:
+                   '9А', '9Б', '9В', '10А', '10Б', '10В', '10Г', '11А', '11Б', '11В', '11Г']:
             if path.exists(f'{date}/{msg}.jpg'):
                 self.photo(event.obj.peer_id, f'{date}/{msg.upper()}.jpg')
             else:
