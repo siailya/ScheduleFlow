@@ -47,4 +47,10 @@ class Bot:
 
 
 if __name__ == "__main__":
-    Bot().main()
+    e = 0
+    while True and e <= 100:
+        try:
+            Bot().main()
+        except:
+            e += 1
+            print('Ошибка!', e)
