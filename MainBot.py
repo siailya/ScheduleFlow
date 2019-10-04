@@ -9,7 +9,7 @@ from Process import *
 class Bot:
     def __init__(self):
         self.vk = vk_api.VkApi(
-            token='e6c8aa32f8b60fd357f2253defbee0416646b7aecea0c4caee2156c8041bf041afe691770b9975a14eb69')
+            token='')
         self.long_poll = VkBotLongPoll(self.vk, group_id='187161295')
         self.vk_api = self.vk.get_api()
         self.upload = vk_api.VkUpload(self.vk)
