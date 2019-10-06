@@ -7,12 +7,27 @@ import requests
 from PIL import Image, ImageFilter
 
 
-def get_tomorrow_date():
-    return str(pendulum.tomorrow().date().__format__('DD.MM.YYYY'))
+def get_date(date=''):
+    if not date:
+        if pendulum.tomorrow().date().weekday() != 6:
+            return str(pendulum.tomorrow().date().__format__('DD.MM.YYYY'))
+        else:
+            tm = pendulum.tomorrow().day + 1
+            mt = pendulum.tomorrow().month
+            if (tm <= 31) and (mt in [1, 3, 5, 7, 8, 10, 12]):
+                return str(pendulum.date(pendulum.tomorrow().year, pendulum.tomorrow().month, tm))
+            elif (tm <= 30) and (mt in [2, 4, 6, 9, 11]):
+                return str(pendulum.date(pendulum.tomorrow().year, pendulum.tomorrow().month, tm))
+            else:
+                tm = 1
+                mt += 1
+                return str(pendulum.date(pendulum.tomorrow().year, mt, tm))
+    else:
+        return date
 
 
-def get_picture():
-    date = get_tomorrow_date()
+def get_picture(d):
+    date = get_date(d)
     url = 'http://school37.com/news/data/upimages/' + date + '-001.png'
     p = requests.get(url)
     out = open(str(date) + ".png", "wb")
@@ -21,7 +36,7 @@ def get_picture():
 
 
 class ScheduleFlow:
-    def __init__(self, class_name, save_name='res'):
+    def __init__(self, class_name, save_name='res', d=''):
         name = class_name.upper()
         if name[:-1] in '567891011' and name[-1] in 'АБВГ':
             trans = {'А': 'A',
@@ -29,8 +44,10 @@ class ScheduleFlow:
                      'В': 'V',
                      'Г': 'G'}
             name = name[:-1] + trans[name[-1]]
-            self.name = get_tomorrow_date() + '.png'
-            get_picture()
+
+            self.d = d
+            self.name = get_date(d) + '.png'
+            get_picture(d)
             self.img = Image.open(self.name)  # Открытие в PIL
             self.img.convert('RGB')
             self.color = (0, 0, 0)
@@ -54,7 +71,7 @@ class ScheduleFlow:
 
             self.res = class_schedule.resize(
                 (int(w * 2), int(h * 2)), Image.ANTIALIAS).filter(ImageFilter.SHARPEN)
-            s_name = get_tomorrow_date() + '/' + save_name + '.jpg'
+            s_name = get_date(d) + '/' + save_name + '.jpg'
             self.res.save(s_name)
             remove(self.name)
 
@@ -152,36 +169,42 @@ class ScheduleFlow:
         tmp.save(self.name)
 
 
-if __name__ == '__main__':
-    if not path.exists(get_tomorrow_date()):
-        mkdir(get_tomorrow_date())
-    c = input('Введите номер класса, либо команду "all" для загрузки всех расписаний\n')
-    if c == 'all':
-        a = input(
-            f'Вы хотите сохранить расписания всех классов в директорию "{get_tomorrow_date()}" y/n\n')
-        if a == 'y':
-            o = ['А', 'Б', 'В', 'Г']
-            for i in range(5, 12):
-                if i in [5, 10, 11]:
-                    for j in range(4):
-                        cl = str(i) + o[j]
-                        try:
-                            ScheduleFlow(cl, cl)
-                        except:
-                            print('Ошибка', end=' ')
-                        print(cl)
-                else:
-                    for j in range(3):
-                        cl = str(i) + o[j]
-                        try:
-                            ScheduleFlow(cl, cl)
-                        except:
-                            print('Ошибка', end=' ')
-                        print(cl)
-    elif c[:-1] in '567891011' and c[-1] in 'АБВГ':
+def SF(cls='all', d=''):
+    if not path.exists(get_date(d)):
+        mkdir(get_date(d))
+    if cls == 'all':
+        o = ['А', 'Б', 'В', 'Г']
+        for i in range(5, 12):
+            if i in [5, 10, 11]:
+                for j in range(4):
+                    cl = str(i) + o[j]
+                    try:
+                        ScheduleFlow(cl, cl, d)
+                    except:
+                        print('Ошибка', end=' ')
+                    print(cl)
+            else:
+                for j in range(3):
+                    cl = str(i) + o[j]
+                    try:
+                        ScheduleFlow(cl, cl, d)
+                    except:
+                        print('Ошибка', end=' ')
+                    print(cl)
+    elif cls[:-1] in '567891011' and cls[-1] in 'АБВГ':
         try:
-            ScheduleFlow(c, c)
+            ScheduleFlow(cls, cls, d)
         except:
             print('Ошибка')
     else:
         print('Ошибка! такого класса не существует!')
+
+
+if __name__ == '__main__':
+    n = input('Введите номер класса, либо команду all\n')
+    if n == all:
+        SF()
+    else:
+        if n in ['5А', '5Б', '5В', '5Г', '6А', '6Б', '6В', '7А', '7Б', '7В', '8А', '8Б', '8В',
+                 '9А', '9Б', '9В', '10А', '10Б', '10В', '10Г', '11А', '11Б', '11В', '11Г']:
+            SF(n)
