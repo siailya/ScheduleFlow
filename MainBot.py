@@ -53,13 +53,21 @@ class Bot:
             date = get_date()
 
         if msg[0] != '!':
+            print(date)
             if msg in classes:
                 if path.exists(f'{date}/{msg}.jpg'):
                     self.photo(event.obj.peer_id, f'{date}/{msg.upper()}.jpg')
                 else:
-                    self.send_msg(event.obj.peer_id, 'Скачиваю и нарезаю расписание...')
-                    SF()
-                    self.photo(event.obj.peer_id, f'{date}/{msg.upper()}.jpg')
+                    self.send_msg(event.obj.peer_id, 'Пробую найти расписание и скачать...\nЕсли '
+                                                     'вы ждете больше 5 секунд, то, скорее всего,'
+                                                     'все идет по плану!')
+                    SF('all', date)
+                    if path.exists(f'{date}/{msg.upper()}.jpg'):
+                        self.send_msg(event.obj.peer_id, f'Расписание на {date} 😉')
+                        self.photo(event.obj.peer_id, f'{date}/{msg.upper()}.jpg')
+                    else:
+                        self.send_msg(event.obj.peer_id, f'К сожалению, не удалось найти '
+                                                         f'расписание на {date} 😬')
             else:
                 self.send_msg(event.obj.peer_id, 'Такого класса не существует!\nПри вводе класса '
                                                  'используйте только цифры и кириллицу!\nНапример '
@@ -95,3 +103,4 @@ if __name__ == "__main__":
             Bot().main()
         except:
             e += 1
+            print('Ошибка', e)

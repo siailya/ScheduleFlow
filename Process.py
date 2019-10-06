@@ -192,7 +192,7 @@ def SF(cls='all', d=''):
                         ScheduleFlow(cl, cl, d)
                     except:
                         print('Ошибка', end=' ')
-                    print(cl)
+                    print(cl, end=' ')
             else:
                 for j in range(3):
                     cl = str(i) + o[j]
@@ -200,7 +200,7 @@ def SF(cls='all', d=''):
                         ScheduleFlow(cl, cl, d)
                     except:
                         print('Ошибка', end=' ')
-                    print(cl)
+                    print(cl, end=' ')
     elif cls[:-1] in '567891011' and cls[-1] in 'АБВГ':
         try:
             ScheduleFlow(cls, cls, d)
