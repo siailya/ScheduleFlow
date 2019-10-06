@@ -9,19 +9,29 @@ from PIL import Image, ImageFilter
 
 def get_date(date=''):
     if not date:
-        if pendulum.tomorrow().date().weekday() != 6:
-            return str(pendulum.tomorrow().date().__format__('DD.MM.YYYY'))
-        else:
-            tm = pendulum.tomorrow().day + 1
-            mt = pendulum.tomorrow().month
-            if (tm <= 31) and (mt in [1, 3, 5, 7, 8, 10, 12]):
-                return str(pendulum.date(pendulum.tomorrow().year, pendulum.tomorrow().month, tm))
-            elif (tm <= 30) and (mt in [2, 4, 6, 9, 11]):
-                return str(pendulum.date(pendulum.tomorrow().year, pendulum.tomorrow().month, tm))
+        if pendulum.now(tz='Europe/Moscow').time().hour >= 16 and pendulum.now(
+                tz='Europe/Moscow').time().hour < 0:
+            if pendulum.tomorrow().date().weekday() != 6:
+                return str(pendulum.tomorrow().date().__format__('DD.MM.YYYY'))
             else:
-                tm = 1
-                mt += 1
-                return str(pendulum.date(pendulum.tomorrow().year, mt, tm))
+                tm = pendulum.tomorrow().day + 1
+                mt = pendulum.tomorrow().month
+                if (tm <= 31) and (mt in [1, 3, 5, 7, 8, 10, 12]):
+                    return str(pendulum.date(pendulum.tomorrow().year, pendulum.tomorrow().month,
+                                             tm).__format__('DD.MM.YYYY'))
+                elif (tm <= 30) and (mt in [2, 4, 6, 9, 11]):
+                    return str(pendulum.date(pendulum.tomorrow().year, pendulum.tomorrow().month,
+                                             tm).__format__('DD.MM.YYYY'))
+                else:
+                    tm = 1
+                    mt += 1
+                    return str(pendulum.date(pendulum.tomorrow().year, mt, tm).__format__(
+                        'DD.MM.YYYY'))
+        else:
+            if pendulum.today().date().weekday() != 6:
+                return str(pendulum.today().date().__format__('DD.MM.YYYY'))
+            else:
+                return str(pendulum.tomorrow().date().__format__('DD.MM.YYYY'))
     else:
         return date
 
@@ -201,10 +211,4 @@ def SF(cls='all', d=''):
 
 
 if __name__ == '__main__':
-    n = input('Введите номер класса, либо команду all\n')
-    if n == all:
-        SF()
-    else:
-        if n in ['5А', '5Б', '5В', '5Г', '6А', '6Б', '6В', '7А', '7Б', '7В', '8А', '8Б', '8В',
-                 '9А', '9Б', '9В', '10А', '10Б', '10В', '10Г', '11А', '11Б', '11В', '11Г']:
-            SF(n)
+    SF()
