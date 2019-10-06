@@ -53,7 +53,6 @@ class Bot:
             date = get_date()
 
         if msg[0] != '!':
-            print(date)
             if msg in classes:
                 if path.exists(f'{date}/{msg}.jpg'):
                     self.photo(event.obj.peer_id, f'{date}/{msg.upper()}.jpg')
