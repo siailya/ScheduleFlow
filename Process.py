@@ -1,4 +1,5 @@
-from os import remove, mkdir, path
+from os import remove, mkdir, path, rmdir
+from shutil import move
 
 import cv2
 import numpy as np
@@ -9,24 +10,27 @@ from PIL import Image, ImageFilter
 
 def get_date(date=''):
     if not date:
-        if pendulum.now(tz='Europe/Moscow').time().hour >= 16 and pendulum.now(
-                tz='Europe/Moscow').time().hour < 0:
+        if pendulum.now(tz='Europe/Moscow').time().hour >= 15 and ((pendulum.now(
+                tz='Europe/Moscow').time().hour <= 23) and pendulum.now(
+            tz='Europe/Moscow').time().minute <= 59):
             if pendulum.tomorrow().date().weekday() != 6:
                 return str(pendulum.tomorrow().date().__format__('DD.MM.YYYY'))
             else:
                 tm = pendulum.tomorrow().day + 1
                 mt = pendulum.tomorrow().month
                 if (tm <= 31) and (mt in [1, 3, 5, 7, 8, 10, 12]):
-                    return str(pendulum.date(pendulum.tomorrow().year, pendulum.tomorrow().month,
-                                             tm).__format__('DD.MM.YYYY'))
+                    return str(
+                        pendulum.date(pendulum.tomorrow().year, pendulum.tomorrow().month,
+                                      tm).__format__('DD.MM.YYYY'))
                 elif (tm <= 30) and (mt in [2, 4, 6, 9, 11]):
-                    return str(pendulum.date(pendulum.tomorrow().year, pendulum.tomorrow().month,
-                                             tm).__format__('DD.MM.YYYY'))
+                    return str(
+                        pendulum.date(pendulum.tomorrow().year, pendulum.tomorrow().month,
+                                      tm).__format__('DD.MM.YYYY'))
                 else:
                     tm = 1
                     mt += 1
-                    return str(pendulum.date(pendulum.tomorrow().year, mt, tm).__format__(
-                        'DD.MM.YYYY'))
+                    return str(pendulum.date(pendulum.tomorrow().year,
+                                             mt, tm).__format__('DD.MM.YYYY'))
         else:
             if pendulum.today().date().weekday() != 6:
                 return str(pendulum.today().date().__format__('DD.MM.YYYY'))
@@ -36,13 +40,27 @@ def get_date(date=''):
         return date
 
 
-def get_picture(d):
-    date = get_date(d)
-    url = 'http://school37.com/news/data/upimages/' + date + '-001.png'
-    p = requests.get(url)
-    out = open(str(date) + ".png", "wb")
-    out.write(p.content)
-    out.close()
+def get_picture(d, r=''):
+    if not r:
+        date = get_date(d)
+        url = 'http://school37.com/news/data/upimages/' + date + '-001.png'
+        p = requests.get(url)
+        out = open(str(date) + ".png", "wb")
+        out.write(p.content)
+        out.close()
+    else:
+        if not path.exists('source'):
+            mkdir('source')
+        if path.exists('source'):
+            date = get_date(d)
+            name = date + ".png"
+            if not path.exists(f'source/{name}'):
+                url = 'http://school37.com/news/data/upimages/' + date + '-001.png'
+                p = requests.get(url)
+                out = open(name, "wb")
+                out.write(p.content)
+                out.close()
+                move(name, f'source/{name}')
 
 
 class ScheduleFlow:
@@ -164,8 +182,14 @@ class ScheduleFlow:
         lit = class_name[-1]
         num = class_name[:-1]
         crop_lit = {'A': 0, 'B': 280, 'V': 560, 'G': 840}
-        crop_num = {'5': 0, '6': 180, '7': int(180 * 2.1), '8': int(180 * 3.1), '9': int(180 * 4.1),
-                    '10': int(180 * 5.25), '11': int(180 * 6.4)}
+        crop_num = {
+            '5': 0,
+            '6': 180,
+            '7': int(180 * 2.1),
+            '8': int(180 * 3.1),
+            '9': int(180 * 4.1),
+            '10': int(180 * 5.25),
+            '11': int(180 * 6.4)}
         crop_x = 400
         if class_name not in ['5G', '11A', '11B', '11V', '11G']:
             crop_y = 280
@@ -180,6 +204,7 @@ class ScheduleFlow:
 
 
 def SF(cls='all', d=''):
+    e = 0
     if not path.exists(get_date(d)):
         mkdir(get_date(d))
     if cls == 'all':
@@ -190,21 +215,28 @@ def SF(cls='all', d=''):
                     cl = str(i) + o[j]
                     try:
                         ScheduleFlow(cl, cl, d)
-                    except:
-                        print('Ошибка', end=' ')
-                    print(cl, end=' ')
+                    except BaseException:
+                        e += 1
+                        print('\nОшибка', end='\n')
+                    print(cl, end='\n')
             else:
                 for j in range(3):
                     cl = str(i) + o[j]
                     try:
                         ScheduleFlow(cl, cl, d)
-                    except:
-                        print('Ошибка', end=' ')
-                    print(cl, end=' ')
+                    except BaseException:
+                        e += 1
+                        print('\nОшибка', end='\n')
+                    print(cl, end='\n')
+            if e >= 11:
+                print(142342)
+                rmdir(get_date(d))
+                remove(f'{get_date(d)}.png')
+                break
     elif cls[:-1] in '567891011' and cls[-1] in 'АБВГ':
         try:
             ScheduleFlow(cls, cls, d)
-        except:
+        except BaseException:
             print('Ошибка')
     else:
         print('Ошибка! такого класса не существует!')
