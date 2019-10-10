@@ -5,7 +5,9 @@ import cv2
 import numpy as np
 import pendulum
 import requests
+import vk_api.vk_api
 from PIL import Image, ImageFilter
+from vk_api.utils import get_random_id
 
 
 def get_date(date=''):
@@ -203,8 +205,16 @@ class ScheduleFlow:
         tmp.save(self.name)
 
 
+def send_console(s):
+    vk = vk_api.VkApi(
+        token='46f3beec75a013ae0556c7558cf031eb56912a7ae17c2e6bd4c8c9c999006a953a9661ca31f3d28ac5dbe')
+    vk_apis = vk.get_api()
+    vk_apis.messages.send(peer_id=2000000001, message=s, random_id=get_random_id())
+
+
 def SF(cls='all', d=''):
     e = 0
+    st = ''
     if not path.exists(get_date(d)):
         mkdir(get_date(d))
     if cls == 'all':
@@ -218,7 +228,9 @@ def SF(cls='all', d=''):
                     except BaseException:
                         e += 1
                         print('\nОшибка', end='\n')
+                        st += '\nОшибка\n'
                     print(cl, end='\n')
+                    st += cl + '\n'
             else:
                 for j in range(3):
                     cl = str(i) + o[j]
@@ -227,12 +239,15 @@ def SF(cls='all', d=''):
                     except BaseException:
                         e += 1
                         print('\nОшибка', end='\n')
+                        st += '\nОшибка\n'
                     print(cl, end='\n')
-            if e >= 11:
-                print(142342)
+                    st += cl + '\n'
+            if e >= 15:
                 rmdir(get_date(d))
                 remove(f'{get_date(d)}.png')
+                st = 'Что-то совсем не так...\n15 ошибок'
                 break
+        send_console(st)
     elif cls[:-1] in '567891011' and cls[-1] in 'АБВГ':
         try:
             ScheduleFlow(cls, cls, d)
