@@ -1,27 +1,18 @@
-from os import path, mkdir
-from pickle import *
-
 import vk_api.vk_api
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 
+from Constantes import Constantes as cst
 from Inbox import *
 
 
 class Bot:
     def __init__(self):
-        self.classes = ['5А', '5Б', '5В', '5Г', '6А', '6Б', '6В', '7А',
-                        '7Б', '7В', '8А', '8Б', '8В', '9А', '9Б', '9В',
-                        '10А', '10Б', '10В', '10Г', '11А', '11Б', '11В',
-                        '11Г']
-        self.vk = vk_api.VkApi(
-            token='46f3beec75a013ae0556c7558cf031eb56912a7ae17c2e6bd4c8c9c999006a953a9661ca31f3d28ac5dbe')
-        self.long_poll = VkBotLongPoll(self.vk, group_id='187427285')
+        self.vk = vk_api.VkApi(token=cst.token)
+        self.long_poll = VkBotLongPoll(self.vk, group_id=cst.group_id)
         self.vk_api = self.vk.get_api()
         self.upload = vk_api.VkUpload(self.vk)
         self.base = {}  # {user_id: [name, last, class]}; {conf_id: [class}
         self.stat = {}  # {requests: count, users: count}
-        self.console_id = 2000000001
-        self.whitelist = [222383631, 66061219, 223632391, 231483322]
 
         if not path.exists('data'):
             mkdir('data')
@@ -62,22 +53,27 @@ class Bot:
         with open(pt, 'rb') as fi:
             self.stat = load(fi)
 
+    def send_msg(self, send_id, message):
+        self.vk_api.messages.send(peer_id=send_id,
+                                  message=message,
+                                  random_id=get_random_id())
+
 
 if __name__ == "__main__":
-    Bot().main()
-    # print('Version 1.3.4B')
-    # if not path.exists(get_date()):
-    #     print('Loading schedules for current date')
-    #     SF()
-    #     print('Loaded!')
-    # else:
-    #     print()
-    # print('====== Work started ======')
-    # Bot().send_msg(self.console_id, f'Запущен!')
-    # e = 0
-    # while e <= 300:
-    #     try:
-    #         Bot().main()
-    #     except BaseException as ex:
-    #         e += 1
-    #         Bot().send_msg(self.console_id, f'🆘 Exception: {ex} <count: {e} >')
+    console_id = cst.console_id
+    print('Version 1.4.3')
+    if not path.exists(get_date()):
+        print('Loading schedules for current date')
+        SF()
+        print('Loaded!')
+    else:
+        print()
+    print('====== Work started ======')
+    Bot().send_msg(console_id, f'Запущен! (не сервер)')
+    e = 0
+    while e <= 300:
+        try:
+            Bot().main()
+        except BaseException as ex:
+            e += 1
+            Bot().send_msg(console_id, f'🆘 Exception: {ex} <count: {e} >')

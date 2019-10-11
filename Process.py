@@ -7,37 +7,44 @@ import pendulum
 import requests
 import vk_api.vk_api
 from PIL import Image, ImageFilter
+from pendulum import *
+from transliterate import translit
 from vk_api.utils import get_random_id
+
+from Constantes import Constantes as cst
 
 
 def get_date(date=''):
     if not date:
-        if pendulum.now(tz='Europe/Moscow').time().hour >= 15 and ((pendulum.now(
-                tz='Europe/Moscow').time().hour <= 23) and pendulum.now(
-            tz='Europe/Moscow').time().minute <= 59):
-            if pendulum.tomorrow().date().weekday() != 6:
-                return str(pendulum.tomorrow().date().__format__('DD.MM.YYYY'))
+        hr = now(tz='Europe/Moscow').time().hour
+        mt = now(tz='Europe/Moscow').time().minute
+        yr = tomorrow().year
+        mtt = tomorrow().month
+        td = now().weekday()
+        if td == 6:
+            return tomorrow().date().__format__('DD.MM.YYYY')
+        elif td in [0, 1, 2, 3, 4]:
+            if (hr >= 14) and ((hr <= 23) and (mt <= 59)):
+                return tomorrow().date().__format__('DD.MM.YYYY')
             else:
-                tm = pendulum.tomorrow().day + 1
-                mt = pendulum.tomorrow().month
-                if (tm <= 31) and (mt in [1, 3, 5, 7, 8, 10, 12]):
-                    return str(
-                        pendulum.date(pendulum.tomorrow().year, pendulum.tomorrow().month,
-                                      tm).__format__('DD.MM.YYYY'))
-                elif (tm <= 30) and (mt in [2, 4, 6, 9, 11]):
-                    return str(
-                        pendulum.date(pendulum.tomorrow().year, pendulum.tomorrow().month,
-                                      tm).__format__('DD.MM.YYYY'))
-                else:
-                    tm = 1
-                    mt += 1
-                    return str(pendulum.date(pendulum.tomorrow().year,
-                                             mt, tm).__format__('DD.MM.YYYY'))
+                return today().date().__format__('DD.MM.YYYY')
         else:
-            if pendulum.today().date().weekday() != 6:
-                return str(pendulum.today().date().__format__('DD.MM.YYYY'))
+            if ((hr >= 14) and (mt <= 30)) and ((hr <= 23) and (mt <= 59)):
+                if tomorrow().day + 1 in [30, 31]:
+                    if mtt in [1, 3, 5, 7, 8, 10, 12]:
+                        if tomorrow().day + 1 == 31:
+                            return pendulum.date(yr, mtt + 1, 1).__format__('DD.MM.YYYY')
+                        else:
+                            return pendulum.date(yr, mtt, 31).__format__('DD.MM.YYYY')
+                    else:
+                        if tomorrow().day + 1 == 30:
+                            return pendulum.date(yr, mtt + 1, 1).__format__('DD.MM.YYYY')
+                        else:
+                            return pendulum.date(yr, mtt, 30).__format__('DD.MM.YYYY')
+                else:
+                    return pendulum.date(yr, mtt, tomorrow().day + 1).__format__('DD.MM.YYYY')
             else:
-                return str(pendulum.tomorrow().date().__format__('DD.MM.YYYY'))
+                return today().date().__format__('DD.MM.YYYY')
     else:
         return date
 
@@ -113,12 +120,12 @@ class ScheduleFlow:
         # Код самого Темплейт-метчинга я где-то нашел, но тут 1 строка
         cond = False
         threshold = 0.7
+        e = 0
         # Открытие самого шаблона, по которому ищем класс
         template = cv2.imread(template_name, 0)
-        while not cond and threshold > 0:
+        while (not cond) and (threshold > 0) and (e <= 30):
             try:
-                res = cv2.matchTemplate(
-                    self.img_gray, template, cv2.TM_CCOEFF_NORMED)
+                res = cv2.matchTemplate(self.img_gray, template, cv2.TM_CCOEFF_NORMED)
                 # Выполняем поиск
                 # Преобразование карты в массив для обработки и
                 loc = np.where(res >= threshold)
@@ -126,13 +133,16 @@ class ScheduleFlow:
                 # Получаем координаты верхнего левого угла
                 coord = list(list(zip(*loc[::-1]))[0])
                 x, y = tuple(coord)
-            except IndexError:  # Если подходящих значений не оказалось, уменьшаем и прокручиваем
-                # опять
+                e += 1
+            except:
                 threshold -= 0.1
+                e += 1
             else:
-                if y < 70:
+                if y < 110:
                     cond = True
-        # print(f'y = {y}', end='; ')
+                else:
+                    e += 1
+        print(f'y = {y}; e = {e}', end='; ')
         return x, y
 
     # Функция поиска левой, верхней, правой и нижней координаты класса
@@ -187,11 +197,11 @@ class ScheduleFlow:
         crop_num = {
             '5': 0,
             '6': 180,
-            '7': int(180 * 2.1),
-            '8': int(180 * 3.1),
-            '9': int(180 * 4.1),
-            '10': int(180 * 5.25),
-            '11': int(180 * 6.4)}
+            '7': int(180 * 2),
+            '8': int(180 * 3),
+            '9': int(180 * 4),
+            '10': int(180 * 5),
+            '11': int(180 * 6)}
         crop_x = 400
         if class_name not in ['5G', '11A', '11B', '11V', '11G']:
             crop_y = 280
@@ -206,15 +216,15 @@ class ScheduleFlow:
 
 
 def send_console(s):
-    vk = vk_api.VkApi(
-        token='46f3beec75a013ae0556c7558cf031eb56912a7ae17c2e6bd4c8c9c999006a953a9661ca31f3d28ac5dbe')
+    vk = vk_api.VkApi(token=cst.token)
     vk_apis = vk.get_api()
-    vk_apis.messages.send(peer_id=2000000001, message=s, random_id=get_random_id())
+    vk_apis.messages.send(peer_id=cst.console_id, message=s, random_id=get_random_id())
 
 
 def SF(cls='all', d=''):
     e = 0
-    st = ''
+    d = get_date(d)
+    st = f'Статус загрузки расписания на {get_date(d)}:\n'
     if not path.exists(get_date(d)):
         mkdir(get_date(d))
     if cls == 'all':
@@ -227,9 +237,9 @@ def SF(cls='all', d=''):
                         ScheduleFlow(cl, cl, d)
                     except BaseException:
                         e += 1
-                        print('\nОшибка', end='\n')
+                        print(translit('\nОшибка', language_code='ru', reversed=True), end='\n')
                         st += '\nОшибка\n'
-                    print(cl, end='\n')
+                    print(translit(cl, language_code='ru', reversed=True), end='\n')
                     st += cl + '\n'
             else:
                 for j in range(3):
@@ -238,9 +248,9 @@ def SF(cls='all', d=''):
                         ScheduleFlow(cl, cl, d)
                     except BaseException:
                         e += 1
-                        print('\nОшибка', end='\n')
+                        print(translit('\nОшибка', language_code='ru', reversed=True), end='\n')
                         st += '\nОшибка\n'
-                    print(cl, end='\n')
+                    print(translit(cl, language_code='ru', reversed=True), end='\n')
                     st += cl + '\n'
             if e >= 15:
                 rmdir(get_date(d))
@@ -252,9 +262,9 @@ def SF(cls='all', d=''):
         try:
             ScheduleFlow(cls, cls, d)
         except BaseException:
-            print('Ошибка')
+            print('Error')
     else:
-        print('Ошибка! такого класса не существует!')
+        print('Error! No such class!')
 
 
 if __name__ == '__main__':

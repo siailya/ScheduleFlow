@@ -1,11 +1,12 @@
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 from vk_api.utils import get_random_id
 
+from Constantes import Constantes as cst
+
 
 class Keyboards:
     def __init__(self, api):
         self.vk_api = api
-        self.console_id = 2000000001
 
     def menu_keyboard(self, send_id, c=True):
         keyboard = VkKeyboard(one_time=False)
@@ -28,6 +29,7 @@ class Keyboards:
         keyboard.add_line()
         keyboard.add_button('Статистика', color=VkKeyboardColor.PRIMARY)
         keyboard.add_button('Обновить', color=VkKeyboardColor.PRIMARY)
+        keyboard.add_button('На завтра', color=VkKeyboardColor.PRIMARY)
         keyboard.add_line()
         keyboard.add_button('Настройки', color=VkKeyboardColor.DEFAULT)
         self.vk_api.messages.send(peer_id=send_id, random_id=get_random_id(),
@@ -77,8 +79,10 @@ class Keyboards:
         keyboard = VkKeyboard(one_time=False)
         keyboard.add_button('Пользователи', color=VkKeyboardColor.PRIMARY)
         keyboard.add_button('Загрузить', color=VkKeyboardColor.PRIMARY)
-        keyboard.add_button('Статистика', color=VkKeyboardColor.PRIMARY)
         keyboard.add_line()
-        self.vk_api.messages.send(peer_id=self.console_id, random_id=get_random_id(),
+        keyboard.add_button('Статистика', color=VkKeyboardColor.PRIMARY)
+        keyboard.add_button('Обновить', color=VkKeyboardColor.PRIMARY)
+        keyboard.add_button('На завтра', color=VkKeyboardColor.PRIMARY)
+        self.vk_api.messages.send(peer_id=cst.console_id, random_id=get_random_id(),
                                   keyboard=keyboard.get_keyboard(),
                                   message='Консольное меню')
