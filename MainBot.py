@@ -1,7 +1,6 @@
 import vk_api.vk_api
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 
-from Constantes import Constantes as cst
 from Inbox import *
 
 
@@ -61,7 +60,7 @@ class Bot:
 
 if __name__ == "__main__":
     console_id = cst.console_id
-    print('Version 1.4.3')
+    print(f'{cst.ver}')
     if not path.exists(get_date()):
         print('Loading schedules for current date')
         SF()
@@ -69,7 +68,7 @@ if __name__ == "__main__":
     else:
         print()
     print('====== Work started ======')
-    Bot().send_msg(console_id, f'Запущен! (не сервер)')
+    Bot().send_msg(console_id, f'Запущен! Версия {cst.ver}')
     e = 0
     while e <= 300:
         try:
