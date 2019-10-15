@@ -85,14 +85,13 @@ class ScheduleFlow:
             self.d = d
             self.name = get_date(d) + '.png'
             get_picture(d)
-            self.img = Image.open(self.name)  # Открытие в PIL
+            self.img = Image.open(self.name)
             self.img.convert('RGB')
             self.color = (0, 0, 0)
 
             self.crop_for_class(name)
             self.img = Image.open(self.name)
 
-            # Открытие в OpenCV для поика шаблона
             self.img_rgb = cv2.imread(self.name)
             self.img_gray = cv2.cvtColor(self.img_rgb, cv2.COLOR_BGR2GRAY)
 
@@ -100,8 +99,7 @@ class ScheduleFlow:
             template = Image.open(t_name)
             self.template_w, self.template_h = template.size
 
-            self.x, self.y = self.brute_force(
-                t_name)  # Точки найденного шаблона
+            self.x, self.y = self.brute_force(t_name)
 
             class_schedule = self.img.crop(self.find_box(name))
             w, h = class_schedule.size
