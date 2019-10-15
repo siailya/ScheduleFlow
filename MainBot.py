@@ -69,7 +69,7 @@ if __name__ == "__main__":
     else:
         print()
     print('====== Work started ======')
-    Bot().send_msg(console_id, f'Запущен (Не сервер)! Версия {cst.ver}')
+    Bot().send_msg(console_id, f'Запущен! Версия {cst.ver}')
     e = 0
     while e <= 300:
         try:
