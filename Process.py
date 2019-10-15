@@ -52,7 +52,7 @@ def get_date(date=''):
 def get_picture(d, r=''):
     if not r:
         date = get_date(d)
-        url = 'http://school37.com/news/data/upimages/' + date + '-001.png'
+        url = 'http://school37.com/news/data/upimages/' + date + '.png'
         p = requests.get(url)
         out = open(str(date) + ".png", "wb")
         out.write(p.content)
@@ -64,7 +64,7 @@ def get_picture(d, r=''):
             date = get_date(d)
             name = date + ".png"
             if not path.exists(f'source/{name}'):
-                url = 'http://school37.com/news/data/upimages/' + date + '-001.png'
+                url = 'http://school37.com/news/data/upimages/' + date + '.png'
                 p = requests.get(url)
                 out = open(name, "wb")
                 out.write(p.content)
@@ -112,25 +112,15 @@ class ScheduleFlow:
             self.res.save(s_name)
             remove(self.name)
 
-    # Функция для поика надписи класса
-    # Брутфорс - потому что ищется грубым перебором
-    # Я пока не придумал способ лучше
     def brute_force(self, template_name):
-        # Поиск координат класса по шаблону
-        # Код самого Темплейт-метчинга я где-то нашел, но тут 1 строка
         cond = False
         threshold = 0.7
         e = 0
-        # Открытие самого шаблона, по которому ищем класс
         template = cv2.imread(template_name, 0)
         while (not cond) and (threshold > 0) and (e <= 30):
             try:
                 res = cv2.matchTemplate(self.img_gray, template, cv2.TM_CCOEFF_NORMED)
-                # Выполняем поиск
-                # Преобразование карты в массив для обработки и
                 loc = np.where(res >= threshold)
-                # поиска подходящих значений
-                # Получаем координаты верхнего левого угла
                 coord = list(list(zip(*loc[::-1]))[0])
                 x, y = tuple(coord)
                 e += 1
@@ -142,16 +132,16 @@ class ScheduleFlow:
                     cond = True
                 else:
                     e += 1
-        print(f'y = {y}; e = {e}', end='; ')
+                    threshold -= 0.1
+        print(f'y = {y}; e = {e}; th = {threshold};', end=' ')
+        with open('log.txt', encoding='u8', mode='a') as f:
+            f.write(f'y = {y}; e = {e}; th = {threshold} ')
         return x, y
 
-    # Функция поиска левой, верхней, правой и нижней координаты класса
     def find_box(self, class_name):
         crop_y0 = self.y - 3
         self.color = self.img.getpixel((int(self.x), int(self.y)))
 
-        # Поиск нижней точки:
-        # Для верхних:
         if class_name not in ['11', '5', '11A', '11B', '11V', '11G', '5G']:
             delta_y = self.y + 120
             x, y = int(self.x), int(delta_y)
@@ -160,7 +150,6 @@ class ScheduleFlow:
                 y += 1
                 color = self.img.getpixel((x, y))
             crop_y1 = y - 20
-        # Для нижних
         else:
             delta_y = self.y + 240
             x, y = int(self.x), int(delta_y)
@@ -170,7 +159,6 @@ class ScheduleFlow:
                 color = self.img.getpixel((x, y))
             crop_y1 = y
 
-        # Поиск левой точки:
         delta_x1 = self.x
         x, y = int(delta_x1), int(self.y)
         color = self.img.getpixel((x, y))
@@ -179,7 +167,6 @@ class ScheduleFlow:
             color = self.img.getpixel((x, y))
         crop_x0 = x
 
-        # Поиск правой точки:
         delta_x2 = self.x + self.template_w
         x, y = int(delta_x2), int(self.y)
         color = self.img.getpixel((x, y))
@@ -213,6 +200,7 @@ class ScheduleFlow:
         y1 = int(y0 + crop_y)
         tmp = self.img.crop((x0, y0, x1, y1))
         tmp.save(self.name)
+        tmp.save(f'tmp/{class_name}.jpg')
 
 
 def send_console(s):
@@ -222,9 +210,10 @@ def send_console(s):
 
 
 def SF(cls='all', d=''):
+    with open('log.txt', encoding='u8', mode='w') as f:
+        f.write(f'{pendulum.now().__format__("HH:mm DD.MM.YYYY")}\n')
     e = 0
     d = get_date(d)
-    st = f'Статус загрузки расписания на {get_date(d)}:\n'
     if not path.exists(get_date(d)):
         mkdir(get_date(d))
     if cls == 'all':
@@ -235,29 +224,35 @@ def SF(cls='all', d=''):
                     cl = str(i) + o[j]
                     try:
                         ScheduleFlow(cl, cl, d)
-                    except BaseException:
+                    except BaseException as k:
                         e += 1
-                        print(translit('\nОшибка', language_code='ru', reversed=True), end='\n')
-                        st += '\nОшибка\n'
-                    print(translit(cl, language_code='ru', reversed=True), end='\n')
-                    st += cl + '\n'
+                        print(translit(f'\nОшибка {k} ', language_code='ru', reversed=True))
+                        with open('log.txt', encoding='u8', mode='a') as f:
+                            f.write(f'\nОшибка {k} ')
+                    print(translit(cl, language_code='ru', reversed=True))
+                    with open('log.txt', encoding='u8', mode='a') as f:
+                        f.write(f'{cl}\n')
             else:
                 for j in range(3):
                     cl = str(i) + o[j]
                     try:
                         ScheduleFlow(cl, cl, d)
-                    except BaseException:
+                    except BaseException as k:
                         e += 1
-                        print(translit('\nОшибка', language_code='ru', reversed=True), end='\n')
-                        st += '\nОшибка\n'
-                    print(translit(cl, language_code='ru', reversed=True), end='\n')
-                    st += cl + '\n'
-            if e >= 15:
+                        print(translit(f'\nОшибка {k} ', language_code='ru', reversed=True))
+                        with open('log.txt', encoding='u8', mode='a') as f:
+                            f.write(f'\nОшибка {k} ')
+                    print(translit(cl, language_code='ru', reversed=True))
+                    with open('log.txt', encoding='u8', mode='a') as f:
+                        f.write(f'{cl}\n')
+            if e >= 20:
                 rmdir(get_date(d))
                 remove(f'{get_date(d)}.png')
-                st = 'Что-то совсем не так...\n15 ошибок'
+                with open('log.txt', encoding='u8', mode='a') as f:
+                    f.write('Лимит ошибок!')
                 break
-        send_console(st)
+        with open('log.txt', encoding='u8', mode='r') as f:
+            send_console(f'Лог загрузки расписания на {get_date(d)}:\n\n{f.read()}')
     elif cls[:-1] in '567891011' and cls[-1] in 'АБВГ':
         try:
             ScheduleFlow(cls, cls, d)

@@ -12,7 +12,8 @@ class Bot:
         self.upload = vk_api.VkUpload(self.vk)
         self.base = {}  # {user_id: [name, last, class]}; {conf_id: [class}
         self.stat = {}  # {requests: count, users: count}
-
+        if not path.exists('tmp'):
+            mkdir('tmp')
         if not path.exists('data'):
             mkdir('data')
             pt = 'data/base.pickle'
