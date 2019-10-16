@@ -104,11 +104,26 @@ class ScheduleFlow:
             class_schedule = self.img.crop(self.find_box(name))
             w, h = class_schedule.size
 
-            self.res = class_schedule.resize(
-                (int(w * 2), int(h * 2)), Image.ANTIALIAS).filter(ImageFilter.SHARPEN)
-            s_name = get_date(d) + '/' + save_name + '.jpg'
+            self.res = class_schedule.resize((int(w * 1.5), int(h * 1.5)),
+                                             Image.ANTIALIAS).filter(
+                ImageFilter.GaussianBlur(radius=0.1))
+            self.res = self.water(self.res)
+            s_name = get_date(d) + '/' + save_name + '.png'
             self.res.save(s_name)
             remove(self.name)
+
+    def water(self, img):
+        water = Image.open('labels/water.png')
+        w, h = img.size
+        w1, h1 = water.size
+        scale = w / w1
+        water.resize((int(w1 * scale), int(h1 * scale))).save('tmpw.png')
+        water = Image.open('tmpw.png')
+        w1, h1 = water.size
+        sample = Image.new('RGB', (w, h + h1))
+        sample.paste(img, (0, 0, w, h))
+        sample.paste(water, (0, h, w, h + h1))
+        return sample
 
     def brute_force(self, template_name):
         cond = False
@@ -147,7 +162,7 @@ class ScheduleFlow:
             while color != self.color:
                 y += 1
                 color = self.img.getpixel((x, y))
-            crop_y1 = y - 20
+            crop_y1 = y - 15
         else:
             delta_y = self.y + 240
             x, y = int(self.x), int(delta_y)
@@ -163,7 +178,7 @@ class ScheduleFlow:
         while color == self.color:
             x -= 1
             color = self.img.getpixel((x, y))
-        crop_x0 = x
+        crop_x0 = x + 2
 
         delta_x2 = self.x + self.template_w
         x, y = int(delta_x2), int(self.y)
@@ -171,7 +186,7 @@ class ScheduleFlow:
         while color == self.color:
             x += 1
             color = self.img.getpixel((x, y))
-        crop_x1 = x + 1
+        crop_x1 = x - 1
 
         return tuple([crop_x0, crop_y0, crop_x1, crop_y1])
 
@@ -198,7 +213,7 @@ class ScheduleFlow:
         y1 = int(y0 + crop_y)
         tmp = self.img.crop((x0, y0, x1, y1))
         tmp.save(self.name)
-        tmp.save(f'tmp/{class_name}.jpg')
+        tmp.save(f'tmp/{class_name}.png')
 
 
 def send_console(s):
