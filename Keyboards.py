@@ -13,6 +13,7 @@ class Keyboards:
         if c:
             keyboard.add_button('Расписание', color=VkKeyboardColor.DEFAULT)
         keyboard.add_button('Общее расписание', color=VkKeyboardColor.DEFAULT)
+        keyboard.add_button('Расписание звонков', color=VkKeyboardColor.DEFAULT)
         keyboard.add_line()
         keyboard.add_button('Настройки', color=VkKeyboardColor.PRIMARY)
         self.vk_api.messages.send(peer_id=send_id, random_id=get_random_id(),
@@ -23,11 +24,11 @@ class Keyboards:
         keyboard = VkKeyboard(one_time=False)
         keyboard.add_button('Расписание', color=VkKeyboardColor.DEFAULT)
         keyboard.add_button('Общее расписание', color=VkKeyboardColor.DEFAULT)
+        keyboard.add_button('Расписание звонков', color=VkKeyboardColor.DEFAULT)
         keyboard.add_line()
         keyboard.add_button('Пользователи', color=VkKeyboardColor.PRIMARY)
-        keyboard.add_button('Загрузить', color=VkKeyboardColor.PRIMARY)
-        keyboard.add_line()
         keyboard.add_button('Статистика', color=VkKeyboardColor.PRIMARY)
+        keyboard.add_line()
         keyboard.add_button('Обновить', color=VkKeyboardColor.PRIMARY)
         keyboard.add_button('На завтра', color=VkKeyboardColor.PRIMARY)
         keyboard.add_line()
@@ -37,7 +38,7 @@ class Keyboards:
                                   message='Админ-меню')
 
     def class_keyboard(self, send_id):
-        keyboard = VkKeyboard(one_time=True)
+        keyboard = VkKeyboard(one_time=False)
         keyboard.add_button('5', color=VkKeyboardColor.DEFAULT)
         keyboard.add_button('6', color=VkKeyboardColor.DEFAULT)
         keyboard.add_button('7', color=VkKeyboardColor.DEFAULT)
@@ -53,7 +54,7 @@ class Keyboards:
                                   message='Выбери номера класса')
 
     def litera_keyboard(self, send_id, g):
-        keyboard = VkKeyboard(one_time=True)
+        keyboard = VkKeyboard(one_time=False)
         keyboard.add_button('А', color=VkKeyboardColor.DEFAULT)
         keyboard.add_button('Б', color=VkKeyboardColor.DEFAULT)
         keyboard.add_line()
@@ -67,7 +68,7 @@ class Keyboards:
                                   message='Отлично! Теперь выбери литеру класса')
 
     def service_keyboard(self, send_id):
-        keyboard = VkKeyboard(one_time=True)
+        keyboard = VkKeyboard(one_time=False)
         keyboard.add_button('Сменить класс', color=VkKeyboardColor.DEFAULT)
         keyboard.add_line()
         keyboard.add_button('Назад', color=VkKeyboardColor.PRIMARY)

@@ -10,8 +10,8 @@ class Bot:
         self.long_poll = VkBotLongPoll(self.vk, group_id=cst.group_id)
         self.vk_api = self.vk.get_api()
         self.upload = vk_api.VkUpload(self.vk)
-        self.base = {}  # {user_id: [name, last, class]}; {conf_id: [class}
-        self.stat = {}  # {requests: count, users: count}
+        self.base = {}  # {user_id: [name, last, class, state]}
+        self.stat = {}  # {requests: count, users: count, thank: count}
         if not path.exists('tmp'):
             mkdir('tmp')
         if not path.exists('data'):
@@ -34,6 +34,7 @@ class Bot:
             if event.type == VkBotEventType.MESSAGE_NEW:
                 if event.obj.text:
                     Inbox(self.vk, event, self.base, self.stat)
+                    self.write_base()
 
     def write_base(self):
         pt = 'data/base.pickle'
