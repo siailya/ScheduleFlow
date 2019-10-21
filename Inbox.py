@@ -32,11 +32,17 @@ class Inbox:
         msg = event.obj.text.lower()
         name, last = self.u_get(u_id)
         if u_id not in cst.admins:
-            self.send_msg(cst.console_id, f'Сообщение от: @id{u_id}({name} {last}) ('
-                                          f'{self.base[u_id][2]})\n'
-                                           f'{event.obj.text}')
-            print(translit(f'Сообщение от: @id{u_id}({name} {last})\n{event.obj.text}',
-                           reversed=True))
+            if u_id in self.base.keys():
+                self.send_msg(cst.console_id, f'Сообщение от: @id{u_id}({name} {last}) '
+                                              f'({self.base[u_id][2]})\n'
+                                              f'{event.obj.text}')
+                print(translit(f'Сообщение от: @id{u_id}({name} {last}) ({self.base[u_id][2]})'
+                               f'\n{event.obj.text}', reversed=True))
+            else:
+                self.send_msg(cst.console_id, f'Сообщение от: @id{u_id}({name} {last})\n'
+                                              f'{event.obj.text}')
+                print(translit(f'Сообщение от: @id{u_id}({name} {last})\n{event.obj.text}',
+                               reversed=True))
         # Регистрация нового пользователя
         if u_id not in self.base.keys():
             self.base.update({u_id: [name, last, 'Ns', 0]})
@@ -254,7 +260,8 @@ class Inbox:
         elif msg == '[club187161295|scheduleflow] статистика':
             self.send_msg(cst.console_id, f'Число запросов расписания: '
                                            f'{self.stat["requests"]}\nЧисло юзеров: '
-                                           f'{self.stat["users"]}')
+                                          f'{self.stat["users"]}\n'
+                                          f'Благодарностей: {self.stat["thank"]}')
         elif msg == '[club187161295|scheduleflow] на завтра':
             try:
                 self.send_msg(cst.console_id, 'Проверяю расписание на завтра')
@@ -275,6 +282,18 @@ class Inbox:
             print(translit(ms))
             for i in self.base.keys():
                 self.send_msg(i, ms)
+        elif 'сообщение юзеру' in msg:
+            try:
+                idu, ms = event.obj.text[16:].split('_')
+                self.send_msg(idu, ms)
+            except BaseException:
+                pass
+        elif 'рассылка класс' in msg:
+            cls, text = event.obj.text[15:].split('_')
+            print(cls)
+            for i in self.base.keys():
+                if self.base[i][2] == cls.lower():
+                    self.send_msg(i, text)
 
     def write_base(self):
         pt = 'data/base.pickle'

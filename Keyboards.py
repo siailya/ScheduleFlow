@@ -8,6 +8,13 @@ class Keyboards:
     def __init__(self, api):
         self.vk_api = api
 
+    def start_keyboard(self, send_id):
+        keyboard = VkKeyboard(one_time=True)
+        keyboard.add_button('Начать!', color=VkKeyboardColor.DEFAULT)
+        self.vk_api.messages.send(peer_id=send_id, random_id=get_random_id(),
+                                  keyboard=keyboard.get_keyboard(),
+                                  message='Жми кнопку "Начать"')
+
     def menu_keyboard(self, send_id, c=True):
         keyboard = VkKeyboard(one_time=False)
         if c:
