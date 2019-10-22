@@ -291,9 +291,9 @@ class Inbox:
 
     def sch(self, send_id):
         if pendulum.now().weekday() == 0:
-            s = 'photo-187161295_457240000'
+            s = 'photo-187161295_457240609'
         elif pendulum.now().weekday() != 6:
-            s = 'photo-187161295_457240001'
+            s = 'photo-187161295_457240610'
         else:
             s = 0
             self.send_msg(send_id, 'По воскресеньям не учимся 😉')

@@ -1,3 +1,5 @@
+import threading
+
 import vk_api.vk_api
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 
@@ -28,13 +30,20 @@ class Bot:
                 self.open_base()
             except:
                 pass
+        # self.threads = []
 
     def main(self):
         for event in self.long_poll.listen():
             if event.type == VkBotEventType.MESSAGE_NEW:
                 if event.obj.text:
-                    Inbox(self.vk, event, self.base, self.stat)
+                    # t = threading.Thread(target=self.inbox(event))
+                    # t.start()
+                    # self.threads.append(t)
+                    self.inbox(event)
                     self.write_base()
+
+    def inbox(self, event):
+        Inbox(self.vk, event, self.base, self.stat)
 
     def write_base(self):
         pt = 'data/base.pickle'
