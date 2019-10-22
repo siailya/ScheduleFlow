@@ -29,7 +29,7 @@ def get_date(date=''):
             else:
                 return today().date().__format__('DD.MM.YYYY')
         else:
-            if ((hr >= 14) and (mt <= 30)) and ((hr <= 23) and (mt <= 59)):
+            if (hr >= 14) and ((hr <= 23) and (mt <= 59)):
                 if tomorrow().day + 1 in [30, 31]:
                     if mtt in [1, 3, 5, 7, 8, 10, 12]:
                         if tomorrow().day + 1 == 31:
@@ -107,23 +107,22 @@ class ScheduleFlow:
             self.res = class_schedule.resize((int(w * 1.5), int(h * 1.5)),
                                              Image.ANTIALIAS).filter(
                 ImageFilter.GaussianBlur(radius=0.1))
-            self.res = self.water(self.res)
             s_name = get_date(d) + '/' + save_name + '.png'
             self.res.save(s_name)
             remove(self.name)
 
-    def water(self, img):
-        water = Image.open('labels/water.png')
-        w, h = img.size
-        w1, h1 = water.size
-        scale = w / w1
-        water.resize((int(w1 * scale), int(h1 * scale))).save('tmpw.png')
-        water = Image.open('tmpw.png')
-        w1, h1 = water.size
-        sample = Image.new('RGB', (w, h + h1))
-        sample.paste(img, (0, 0, w, h))
-        sample.paste(water, (0, h, w, h + h1))
-        return sample
+    # def water(self, img):
+    #     water = Image.open('labels/water.png')
+    #     w, h = img.size
+    #     w1, h1 = water.size
+    #     scale = w / w1
+    #     water.resize((int(w1 * scale), int(h1 * scale))).save('tmpw.png')
+    #     water = Image.open('tmpw.png')
+    #     w1, h1 = water.size
+    #     sample = Image.new('RGB', (w, h + h1))
+    #     sample.paste(img, (0, 0, w, h))
+    #     sample.paste(water, (0, h, w, h + h1))
+    #     return sample
 
     def brute_force(self, template_name):
         cond = False
