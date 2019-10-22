@@ -1,11 +1,11 @@
 from pickle import *
 from random import randint
+
 import vk_api.vk_api
-from transliterate import translit
-from Constantes import Constantes as cst
+
 from Keyboards import *
 from Process import *
-import pendulum
+
 
 class Inbox:
     def __init__(self, session, event, base, stat):
@@ -50,7 +50,7 @@ class Inbox:
             self.write_base()
             self.send_msg(u_id, f'Привет, {name}! Давай настроим бота под тебя. Тебе нужно просто '
                                 f'указать свой класс')
-            self.send_msg(cst.console_id, f'Новый юзер!\nВстречайте - @id{u_id}({name} {last})')
+            self.send_msg(cst.console_id, f'✅ Новый юзер!\nВстречайте - @id{u_id}({name} {last})')
             Keyboards(self.vk_api).class_keyboard(u_id)
         else:
             # Выбор класса:
@@ -81,7 +81,6 @@ class Inbox:
                 self.send_msg(u_id, '🙁 Без выбора класса не будет доступен весь функционал. Но '
                                     'его всегда можно выбрать в настройках 😉')
                 Keyboards(self.vk_api).menu_keyboard(u_id, False)
-            # Расписание
             elif self.base[u_id][3] == 2:
                 if msg == 'расписание':
                     self.stat['requests'] = self.stat.get('requests', 0) + 1
@@ -104,7 +103,6 @@ class Inbox:
                             self.send_msg(u_id, f'Что-то пошло не так 😲\nЯ не нашел расписание'
                                                 f' {self.base[u_id][2].upper()} класса на '
                                                 f'{get_date()} 😰')
-                # Общее расписание
                 elif msg == 'общее расписание':
                     self.stat['requests'] = self.stat.get('requests', 0) + 1
                     self.write_base()
@@ -124,75 +122,10 @@ class Inbox:
                         Keyboards(self.vk_api).admin_keyboard(u_id)
                     else:
                         Keyboards(self.vk_api).menu_keyboard(u_id)
-                elif msg == 'пользователи':
-                    if u_id in cst.admins:
-                        u = 'Список юзеров:\n'
-                        for i in self.base.keys():
-                            if i < 2000000000:
-                                u += f'@id{i}({self.base[i][0]} {self.base[i][1]}) - ' \
-                                     f'{self.base[i][2].upper()}\n'
-                            else:
-                                u += f'Беседа {i} - {self.base[i].upper()}\n'
-                        self.send_msg(u_id, u)
-                    else:
-                        self.send_msg(u_id, 'А ты точно администратор? 🙃\nДанная функция доступна '
-                                            'только администраторам!')
-                elif msg == 'статистика':
-                    if u_id in cst.admins:
-                        self.send_msg(u_id, f'Число запросов расписания: '
-                                            f'{self.stat["requests"]}\nЧисло юзеров:'
-                                            f' {self.stat["users"]}\n'
-                                            f'Поблагодарили: {self.stat["thank"]}')
-                    else:
-                        self.send_msg(u_id, 'А ты точно администратор? 🙃\nДанная функция доступна '
-                                            'только администраторам!')
-                elif msg == 'обновить':
-                    if u_id in cst.admins:
-                        SF()
-                        self.send_msg(u_id, 'Обновлено! Ошибки смотри в консоли')
-                    else:
-                        self.send_msg(u_id, 'А ты точно администратор? 🙃\nДанная функция доступна '
-                                            'только администраторам!')
-                elif 'общая рассылка лс' in msg:
-                    if u_id in cst.admins:
-                        ms = event.obj.text[18:]
-                        for i in self.base.keys():
-                            self.send_msg(i, ms)
-                    else:
-                        self.send_msg(u_id, 'А ты точно администратор? 🙃\nДанная функция доступна '
-                                            'только администраторам!')
-                elif 'рассылка класс' in msg:
-                    if u_id in cst.admins:
-                        cls, text = event.obj.text[15:].split('_')
-                        print(cls)
-                        for i in self.base.keys():
-                            if self.base[i][2] == cls.lower():
-                                self.send_msg(i, text)
-                    else:
-                        self.send_msg(u_id, 'А ты точно администратор? 🙃\nДанная функция доступна '
-                                            'только администраторам!')
-                elif msg == 'на завтра':
-                    if u_id in cst.admins:
-                        try:
-                            self.send_msg(u_id, 'Проверяю расписание на завтра')
-                            print(pendulum.tomorrow().date().__format__('DD.MM.YYYY'))
-                            SF('all', get_date(pendulum.tomorrow().date().__format__('DD.MM.YYYY')))
-                            self.send_msg(u_id, 'Расписание на завтра загружено!')
-                        except:
-                            self.send_msg(u_id, 'Ошибка! Скорее всего, расписания на завтра просто '
-                                                'нет...')
-                    else:
-                        self.send_msg(u_id, 'А ты точно администратор? 🙃\nДанная функция доступна '
-                                            'только администраторам!')
-                elif msg in '😀😀😃😄😁😅😂🤣☺😊😇🙂🙃😉😌😍🥰😘😗😙😚😋😛😝😜🤪🤨🧐🤓😎🤩🥳😏' \
-                            '✌🏽✌🏾✌🏿👍🏽👍🏾👍🏿🤲🏽🤲🏿🤲🏾👌🏽👌🏾👌🏿🙏🏽🙏🏾🙏🏿✊🏽✊🏾✊🏿👋🏽👋🏾👋🏿☝🏽☝🏾☝🏿👎🏽👎🏾👎🏿👏🏽👏🏾👏🏿🖐🏽🖐🏾🖐🏿👊🏽' \
-                            '👊🏾👊🏿🤙🏽🤙🏾🤙🏿🤚🏽🤚🏾🤚🏿🤞🏽🤞🏾🤞🏿' \
-                            '👺🤡💩👻💀☠👽👾🤖🎃😺😸😹😻😼😽' \
-                            '🤝👍🏿👎🏿👊🏿✊🏾🤛🏾🤜🏾🤞🏾✌🏾🤟🏾🤘🏾👌🏿👈🏿👉🏿👆🏿👇🏿☝🏿✋🏿🤚🏾🖐🏾🖖🏾👋🏾🤙🏾💪🏾' \
-                            '❤🧡💛💚💙💜💔❣💕💞💓💗💖💟💝💘':
+                elif msg in cst.smiles:
                     self.send_msg(u_id, '😜😀😄😉😊😘😍😃😀😎✌🏻😺😸'[randint(0, 13)])
                 elif 'спасибо' in msg or 'спс' in msg or 'пасиб' in msg or 'сенкс' in msg or 'thank' \
-                        in msg or 'от души' in msg or 'благодарю' in msg:
+                        in msg or 'от души' in msg or 'благодарю' in msg or 'мерси' in msg:
                     self.stat['thank'] = self.stat.get('thank', 0) + 1
                     answ = ['Всегда пожалуйста 😉',
                             'Стараемся для вас! 😀',
@@ -203,6 +136,7 @@ class Inbox:
                     self.send_msg(u_id, answ[randint(0, 5)])
                 elif 'дарова' in msg:
                     self.send_msg(u_id, 'Ну дарова, карова')
+
                 else:
                     if 13 >= len(msg) >= 2:
                         if len(msg) == 2 or len(msg) == 3:
@@ -238,28 +172,31 @@ class Inbox:
         msg = event.obj.text.lower().replace('@', '')
         if msg == '[club187161295|scheduleflow] пользователи':
             u = 'Список юзеров:\n'
+            c = 0
             for i in self.base.keys():
-                if i < 2000000000:
-                    u += f'@id{i}({self.base[i][0]} {self.base[i][1]}) - ' \
-                         f'{self.base[i][2].upper()}\n'
-                else:
-                    u += f'Беседа {i} - {self.base[i][2].upper()}\n'
+                c += 1
+                u += f'@id{i}({self.base[i][0]} {self.base[i][1]}) - ' \
+                     f'{self.base[i][2].upper()}\n'
+                if c >= 50:
+                    c = 0
+                    self.send_msg(cst.console_id, u)
+                    u = ''
             self.send_msg(cst.console_id, u)
         elif msg == '[club187161295|scheduleflow] загрузить':
             if path.exists(f'{get_date()}'):
                 self.send_msg(cst.console_id, 'Расписание уже находится в директории!')
             else:
                 self.send_msg(cst.console_id, f'Попытка скачать расписание. Ход выполнения '
-                                               f'отслеживается в консоли.')
+                                              f'отслеживается в консоли.')
                 SF()
                 self.send_msg(cst.console_id, f'Расписание на {get_date()} загружено! Ошибки '
-                                               f'выше')
+                                              f'выше')
         elif msg == '[club187161295|scheduleflow] обновить':
             SF()
             self.send_msg(cst.console_id, f'Расписание на {get_date()} обновлено!')
         elif msg == '[club187161295|scheduleflow] статистика':
             self.send_msg(cst.console_id, f'Число запросов расписания: '
-                                           f'{self.stat["requests"]}\nЧисло юзеров: '
+                                          f'{self.stat["requests"]}\nЧисло юзеров: '
                                           f'{self.stat["users"]}\n'
                                           f'Благодарностей: {self.stat["thank"]}')
         elif msg == '[club187161295|scheduleflow] на завтра':
@@ -271,29 +208,60 @@ class Inbox:
             except:
                 self.send_msg(cst.console_id, 'Ошибка! Скорее всего, расписания на завтра просто '
                                               'нет...')
+        elif msg == '[club187161295|scheduleflow] полная статистика':
+            cls_us = {'5А': 0, '5Б': 0, '5В': 0, '5Г': 0, '6А': 0, '6Б': 0, '6В': 0, '7А': 0,
+                      '7Б': 0, '7В': 0, '8А': 0, '8Б': 0, '8В': 0, '9А': 0, '9Б': 0, '9В': 0,
+                      '10А': 0, '10Б': 0, '10В': 0, '10Г': 0, '11А': 0, '11Б': 0, '11В': 0,
+                      '11Г': 0, 'NS': 0}
+            p_us = {'5': 0, '6': 0, '7': 0, '8': 0, '9': 0, '10': 0, '11': 0}
+
+            c_state = 'Статистика по классам:\n'
+            for i in self.base.keys():
+                cls_us[self.base[i][2].upper()] = cls_us.get(self.base[i][2].upper(), 0) + 1
+            for i in cls_us.keys():
+                c_state += f'{i.upper()}: {cls_us[i.upper()]} (' \
+                           f'{"%.2f" % (cls_us[i.upper()] / self.stat["users"] * 100)}%)\n'
+
+            p_state = 'Статистика по параллелям\n'
+            for i in self.base.keys():
+                if len(self.base[i][2]) == 2:
+                    p = self.base[i][2][0]
+                else:
+                    p = self.base[i][2][:2]
+                p_us[p] = p_us.get(p, 0) + 1
+            for i in p_us.keys():
+                p_state += f'{i} классы: {p_us[i]} (' \
+                           f'{"%.2f" % (p_us[i] / self.stat["users"] * 100)}%)\n'
+
+            self.send_msg(cst.console_id, f'Число запросов расписания: '
+                                          f'{self.stat["requests"]}\nЧисло юзеров: '
+                                          f'{self.stat["users"]}\n'
+                                          f'Благодарностей: {self.stat["thank"]}\n\n'
+                                          f'{c_state}\n\n{p_state}')
         elif 'общая рассылка лс' in msg:
             ms = event.obj.text[18:]
             print(translit(ms))
             for i in self.base.keys():
-                if i < 2000000000:
-                    self.send_msg(i, ms)
-        elif 'общая рассылка все' in msg:
-            ms = event.obj.text[19:]
-            print(translit(ms))
-            for i in self.base.keys():
                 self.send_msg(i, ms)
         elif 'сообщение юзеру' in msg:
-            try:
-                idu, ms = event.obj.text[16:].split('_')
-                self.send_msg(idu, ms)
-            except BaseException:
-                pass
+            idu, ms = event.obj.text[16:].split('_')
+            self.send_msg(idu, ms)
         elif 'рассылка класс' in msg:
             cls, text = event.obj.text[15:].split('_')
-            print(cls)
+            count = 0
             for i in self.base.keys():
                 if self.base[i][2] == cls.lower():
                     self.send_msg(i, text)
+                    count += 1
+                self.send_msg(cst.console_id, f'Отправлено: {count}')
+        elif 'рассылка параллель' in msg:
+            pr, ms = event.obj.text[19:].split('_')
+            count = 0
+            for i in self.base.keys():
+                if pr in self.base[i][2]:
+                    self.send_msg(i, ms)
+                    count += 1
+            self.send_msg(cst.console_id, f'Отправлено: {count}')
 
     def write_base(self):
         pt = 'data/base.pickle'
