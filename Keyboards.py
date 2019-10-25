@@ -20,6 +20,7 @@ class Keyboards:
         if c:
             keyboard.add_button('Расписание', color=VkKeyboardColor.DEFAULT)
         keyboard.add_button('Общее расписание', color=VkKeyboardColor.DEFAULT)
+        keyboard.add_line()
         keyboard.add_button('Расписание звонков', color=VkKeyboardColor.DEFAULT)
         keyboard.add_line()
         keyboard.add_button('Настройки', color=VkKeyboardColor.PRIMARY)
@@ -31,6 +32,7 @@ class Keyboards:
         keyboard = VkKeyboard(one_time=False)
         keyboard.add_button('Расписание', color=VkKeyboardColor.DEFAULT)
         keyboard.add_button('Общее расписание', color=VkKeyboardColor.DEFAULT)
+        keyboard.add_line()
         keyboard.add_button('Расписание звонков', color=VkKeyboardColor.DEFAULT)
         keyboard.add_line()
         keyboard.add_button('Настройки', color=VkKeyboardColor.DEFAULT)
@@ -62,8 +64,6 @@ class Keyboards:
         keyboard.add_button('В', color=VkKeyboardColor.DEFAULT)
         if g:
             keyboard.add_button('Г', color=VkKeyboardColor.DEFAULT)
-        keyboard.add_line()
-        keyboard.add_button('Без выбора класса', color=VkKeyboardColor.NEGATIVE)
         self.vk_api.messages.send(peer_id=send_id, random_id=get_random_id(),
                                   keyboard=keyboard.get_keyboard(),
                                   message='Отлично! Теперь выбери литеру класса')
@@ -80,8 +80,6 @@ class Keyboards:
     def conslole_keyboard(self):
         keyboard = VkKeyboard(one_time=False)
         keyboard.add_button('Пользователи', color=VkKeyboardColor.PRIMARY)
-        keyboard.add_button('Загрузить', color=VkKeyboardColor.PRIMARY)
-        keyboard.add_line()
         keyboard.add_button('Полная статистика', color=VkKeyboardColor.PRIMARY)
         keyboard.add_line()
         keyboard.add_button('Статистика', color=VkKeyboardColor.PRIMARY)

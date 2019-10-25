@@ -1,57 +1,26 @@
 from os import remove, mkdir, path, rmdir
-from shutil import move
+from pickle import dump
+from shutil import move, copy
 
 import cv2
 import numpy as np
 import pendulum
 import requests
 import vk_api.vk_api
+import vk_api.vk_api
 from PIL import Image, ImageFilter
-from pendulum import *
+from pendulum import now
 from transliterate import translit
+from vk_api import VkUpload
 from vk_api.utils import get_random_id
 
 from Constantes import Constantes as cst
+from Utilities import get_schedule_date
 
 
-def get_date(date=''):
-    if not date:
-        hr = now(tz='Europe/Moscow').time().hour
-        mt = now(tz='Europe/Moscow').time().minute
-        yr = tomorrow().year
-        mtt = tomorrow().month
-        td = now().weekday()
-        if td == 6:
-            return tomorrow().date().__format__('DD.MM.YYYY')
-        elif td in [0, 1, 2, 3, 4]:
-            if (hr >= 14) and ((hr <= 23) and (mt <= 59)):
-                return tomorrow().date().__format__('DD.MM.YYYY')
-            else:
-                return today().date().__format__('DD.MM.YYYY')
-        else:
-            if (hr >= 14) and ((hr <= 23) and (mt <= 59)):
-                if tomorrow().day + 1 in [30, 31]:
-                    if mtt in [1, 3, 5, 7, 8, 10, 12]:
-                        if tomorrow().day + 1 == 31:
-                            return pendulum.date(yr, mtt + 1, 1).__format__('DD.MM.YYYY')
-                        else:
-                            return pendulum.date(yr, mtt, 31).__format__('DD.MM.YYYY')
-                    else:
-                        if tomorrow().day + 1 == 30:
-                            return pendulum.date(yr, mtt + 1, 1).__format__('DD.MM.YYYY')
-                        else:
-                            return pendulum.date(yr, mtt, 30).__format__('DD.MM.YYYY')
-                else:
-                    return pendulum.date(yr, mtt, tomorrow().day + 1).__format__('DD.MM.YYYY')
-            else:
-                return today().date().__format__('DD.MM.YYYY')
-    else:
-        return date
-
-
-def get_picture(d, r=''):
+def get_picture(r=''):
     if not r:
-        date = get_date(d)
+        date = get_schedule_date()
         url = 'http://school37.com/news/data/upimages/' + date + '.png'
         p = requests.get(url)
         out = open(str(date) + ".png", "wb")
@@ -61,7 +30,7 @@ def get_picture(d, r=''):
         if not path.exists('source'):
             mkdir('source')
         if path.exists('source'):
-            date = get_date(d)
+            date = get_schedule_date()
             name = date + ".png"
             if not path.exists(f'source/{name}'):
                 url = 'http://school37.com/news/data/upimages/' + date + '.png'
@@ -83,8 +52,13 @@ class ScheduleFlow:
             name = name[:-1] + trans[name[-1]]
 
             self.d = d
-            self.name = get_date(d) + '.png'
-            get_picture(d)
+            self.name = get_schedule_date() + '.png'
+            if not path.exists(f'source/{get_schedule_date()}.png'):
+                get_picture('y')
+                copy(f'source/{get_schedule_date()}.png', f'{get_schedule_date()}.png')
+            else:
+                copy(f'source/{get_schedule_date()}.png', f'{get_schedule_date()}.png')
+
             self.img = Image.open(self.name)
             self.img.convert('RGB')
             self.color = (0, 0, 0)
@@ -107,22 +81,9 @@ class ScheduleFlow:
             self.res = class_schedule.resize((int(w * 1.5), int(h * 1.5)),
                                              Image.ANTIALIAS).filter(
                 ImageFilter.GaussianBlur(radius=0.1))
-            s_name = get_date(d) + '/' + save_name + '.png'
+            s_name = get_schedule_date() + '/' + save_name + '.png'
             self.res.save(s_name)
             remove(self.name)
-
-    # def water(self, img):
-    #     water = Image.open('labels/water.png')
-    #     w, h = img.size
-    #     w1, h1 = water.size
-    #     scale = w / w1
-    #     water.resize((int(w1 * scale), int(h1 * scale))).save('tmpw.png')
-    #     water = Image.open('tmpw.png')
-    #     w1, h1 = water.size
-    #     sample = Image.new('RGB', (w, h + h1))
-    #     sample.paste(img, (0, 0, w, h))
-    #     sample.paste(water, (0, h, w, h + h1))
-    #     return sample
 
     def brute_force(self, template_name):
         cond = False
@@ -146,7 +107,7 @@ class ScheduleFlow:
                     e += 1
                     threshold -= 0.1
         print(f'y = {y}; e = {e}; th = {threshold};', end=' ')
-        with open('log.txt', encoding='u8', mode='a') as f:
+        with open(f'log/log_{now().__format__("DD.MM HH:mm")}.txt', encoding='u8', mode='a') as f:
             f.write(f'y = {y}; e = {e}; th = {threshold} ')
         return x, y
 
@@ -212,7 +173,7 @@ class ScheduleFlow:
         y1 = int(y0 + crop_y)
         tmp = self.img.crop((x0, y0, x1, y1))
         tmp.save(self.name)
-        tmp.save(f'tmp/{class_name}.png')
+        # tmp.save(f'tmp/{class_name}.png')
 
 
 def send_console(s):
@@ -221,58 +182,66 @@ def send_console(s):
     vk_apis.messages.send(peer_id=cst.console_id, message=s, random_id=get_random_id())
 
 
-def SF(cls='all', d=''):
-    with open('log.txt', encoding='u8', mode='w') as f:
+def upload_class(cls, upload):
+    response = upload.photo_messages(f'{get_schedule_date()}/{cls}.png')[0]
+    attachment = f'photo{response["owner_id"]}_{response["id"]}_{response["access_key"]}'
+    return attachment
+
+
+def download_all():
+    vk = vk_api.VkApi(token=cst.token)
+    upload = VkUpload(vk)
+    attachments = {}
+    with open(f'log/log_{now().__format__("DD.MM HH:mm")}.txt', encoding='u8', mode='w') as f:
         f.write(f'{pendulum.now().__format__("HH:mm DD.MM.YYYY")}\n')
     e = 0
-    d = get_date(d)
-    if not path.exists(get_date(d)):
-        mkdir(get_date(d))
-    if cls == 'all':
-        o = ['А', 'Б', 'В', 'Г']
-        for i in range(5, 12):
-            if i in [5, 10, 11]:
-                for j in range(4):
-                    cl = str(i) + o[j]
-                    try:
-                        ScheduleFlow(cl, cl, d)
-                    except BaseException as k:
-                        e += 1
-                        print(translit(f'\nОшибка {k} ', language_code='ru', reversed=True))
-                        with open('log.txt', encoding='u8', mode='a') as f:
-                            f.write(f'\nОшибка {k} ')
-                    print(translit(cl, language_code='ru', reversed=True))
-                    with open('log.txt', encoding='u8', mode='a') as f:
-                        f.write(f'{cl}\n')
-            else:
-                for j in range(3):
-                    cl = str(i) + o[j]
-                    try:
-                        ScheduleFlow(cl, cl, d)
-                    except BaseException as k:
-                        e += 1
-                        print(translit(f'\nОшибка {k} ', language_code='ru', reversed=True))
-                        with open('log.txt', encoding='u8', mode='a') as f:
-                            f.write(f'\nОшибка {k} ')
-                    print(translit(cl, language_code='ru', reversed=True))
-                    with open('log.txt', encoding='u8', mode='a') as f:
-                        f.write(f'{cl}\n')
-            if e >= 20:
-                rmdir(get_date(d))
-                remove(f'{get_date(d)}.png')
-                with open('log.txt', encoding='u8', mode='a') as f:
-                    f.write('Лимит ошибок!')
-                break
-        with open('log.txt', encoding='u8', mode='r') as f:
-            send_console(f'Лог загрузки расписания на {get_date(d)}:\n\n{f.read()}')
-    elif cls[:-1] in '567891011' and cls[-1] in 'АБВГ':
-        try:
-            ScheduleFlow(cls, cls, d)
-        except BaseException:
-            print('Error')
-    else:
-        print('Error! No such class!')
+    d = get_schedule_date()
+    if not path.exists(str(get_schedule_date())):
+        mkdir(str(get_schedule_date()))
+
+    o = ['А', 'Б', 'В', 'Г']
+    for i in range(5, 12):
+        if i in [5, 10, 11]:
+            for j in range(4):
+                cl = str(i) + o[j]
+                try:
+                    ScheduleFlow(cl, cl, d)
+                    attachments.update({cl: upload_class(cl, upload)})
+                except BaseException as k:
+                    e += 1
+                    print(translit(f'\nОшибка {k} ', language_code='ru', reversed=True))
+                    with open(f'log/log_{now().__format__("DD.MM HH:mm")}.txt', encoding='u8', mode='a') as f:
+                        f.write(f'\nОшибка {k} ')
+                print(translit(cl, language_code='ru', reversed=True))
+                with open(f'log/log_{now().__format__("DD.MM HH:mm")}.txt', encoding='u8', mode='a') as f:
+                    f.write(f'{cl}\n')
+        else:
+            for j in range(3):
+                cl = str(i) + o[j]
+                try:
+                    ScheduleFlow(cl, cl, d)
+                    attachments.update({cl: upload_class(cl, upload)})
+                except BaseException as k:
+                    e += 1
+                    print(translit(f'\nОшибка {k} ', language_code='ru', reversed=True))
+                    with open(f'log/log_{now().__format__("DD.MM HH:mm")}.txt', encoding='u8', mode='a') as f:
+                        f.write(f'\nОшибка {k} ')
+                print(translit(cl, language_code='ru', reversed=True))
+                with open(f'log/log_{now().__format__("DD.MM HH:mm")}.txt', encoding='u8', mode='a') as f:
+                    f.write(f'{cl}\n')
+        if e >= 20:
+            rmdir(str(get_schedule_date()))
+            remove(f'{str(get_schedule_date())}.png')
+            with open(f'log/log_{now().__format__("DD.MM HH:mm")}.txt', encoding='u8', mode='a') as f:
+                f.write('Лимит ошибок!')
+            break
+
+    with open(f'uploaded_photo/{get_schedule_date()}.sf', 'wb') as f:
+        dump(attachments, f)
+
+    with open(f'log/log_{now().__format__("DD.MM HH:mm")}.txt', encoding='u8', mode='r') as f:
+        send_console(f'Лог загрузки расписания на {str(get_schedule_date())}:\n\n{f.read()}')
 
 
 if __name__ == '__main__':
-    SF()
+    download_all()

@@ -1,8 +1,7 @@
-import threading
-
 import vk_api.vk_api
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 
+from Base import open_base
 from Inbox import *
 
 
@@ -13,7 +12,7 @@ class Bot:
         self.vk_api = self.vk.get_api()
         self.upload = vk_api.VkUpload(self.vk)
         self.base = {}  # {user_id: [name, last, class, state]}
-        self.stat = {}  # {requests: count, users: count, thank: count}
+        self.stat = {}  # {requests: count, userBs: count, thank: count}
         if not path.exists('tmp'):
             mkdir('tmp')
         if not path.exists('data'):
@@ -26,42 +25,17 @@ class Bot:
             fi = open(pt, 'wb')
             fi.close()
         else:
-            try:
-                self.open_base()
-            except:
-                pass
-        # self.threads = []
+            open_base(self.base, self.stat)
 
     def main(self):
         for event in self.long_poll.listen():
             if event.type == VkBotEventType.MESSAGE_NEW:
                 if event.obj.text:
-                    # t = threading.Thread(target=self.inbox(event))
-                    # t.start()
-                    # self.threads.append(t)
                     self.inbox(event)
-                    self.write_base()
+                    write_base(self.base, self.stat)
 
     def inbox(self, event):
         Inbox(self.vk, event, self.base, self.stat)
-
-    def write_base(self):
-        pt = 'data/base.pickle'
-        with open(pt, 'wb') as fi:
-            dump(self.base, fi)
-
-        pt = 'data/stat.pickle'
-        with open(pt, 'wb') as fi:
-            dump(self.stat, fi)
-
-    def open_base(self):
-        pt = 'data/base.pickle'
-        with open(pt, 'rb') as fi:
-            self.base = load(fi)
-
-        pt = 'data/stat.pickle'
-        with open(pt, 'rb') as fi:
-            self.stat = load(fi)
 
     def send_msg(self, send_id, message):
         self.vk_api.messages.send(peer_id=send_id,
@@ -72,9 +46,9 @@ class Bot:
 if __name__ == "__main__":
     console_id = cst.console_id
     print(f'{cst.ver}')
-    if not path.exists(get_date()):
+    if not path.exists(get_schedule_date()):
         print('Loading schedules for current date')
-        SF()
+        download_all()
         print('Loaded!')
     else:
         print()
