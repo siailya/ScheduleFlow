@@ -13,7 +13,6 @@ class Inbox:
         self.vk = session
         self.upload = vk_api.VkUpload(self.vk)
         self.vk_api = self.vk.get_api()
-
         self.peer_id = event.obj.peer_id
 
         if self.peer_id == cst.console_id:

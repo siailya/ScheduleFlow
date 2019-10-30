@@ -1,7 +1,8 @@
+from pickle import load
+
 import vk_api.vk_api
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 
-from Base import open_base
 from Inbox import *
 
 
@@ -13,8 +14,13 @@ class Bot:
         self.upload = vk_api.VkUpload(self.vk)
         self.base = {}  # {user_id: [name, last, class, state]}
         self.stat = {}  # {requests: count, userBs: count, thank: count}
-        if not path.exists('tmp'):
-            mkdir('tmp')
+
+        # if not path.exists('tmp'):
+        #     mkdir('tmp')
+        if not path.exists('log'):
+            mkdir('log')
+        if not path.exists('uploaded_photo'):
+            mkdir('uploaded_photo')
         if not path.exists('data'):
             mkdir('data')
             pt = 'data/base.pickle'
@@ -25,7 +31,7 @@ class Bot:
             fi = open(pt, 'wb')
             fi.close()
         else:
-            open_base(self.base, self.stat)
+            self.open_base()
 
     def main(self):
         for event in self.long_poll.listen():
@@ -42,22 +48,32 @@ class Bot:
                                   message=message,
                                   random_id=get_random_id())
 
+    def open_base(self):
+        pt = 'data/base.pickle'
+        with open(pt, 'rb') as fi:
+            self.base = load(fi)
+
+        pt = 'data/stat.pickle'
+        with open(pt, 'rb') as fi:
+            self.stat = load(fi)
+
 
 if __name__ == "__main__":
-    console_id = cst.console_id
-    print(f'{cst.ver}')
-    if not path.exists(get_schedule_date()):
-        print('Loading schedules for current date')
-        download_all()
-        print('Loaded!')
-    else:
-        print()
-    print('====== Work started ======')
-    Bot().send_msg(console_id, f'Запущен! Версия {cst.ver}')
-    e = 0
-    while e <= 300:
-        try:
-            Bot().main()
-        except BaseException as ex:
-            e += 1
-            Bot().send_msg(console_id, f'🆘 Exception: {ex} <count: {e} >')
+    Bot().main()
+    # console_id = cst.console_id
+    # print(f'{cst.ver}')
+    # if not path.exists(get_schedule_date()):
+    #     print('Loading schedules for current date')
+    #     download_all()
+    #     print('Loaded!')
+    # else:
+    #     print()
+    # print('====== Work started ======')
+    # Bot().send_msg(console_id, f'Запущен! Версия {cst.ver}')
+    # e = 0
+    # while e <= 300:
+    #     try:
+    #         Bot().main()
+    #     except BaseException as ex:
+    #         e += 1
+    #         Bot().send_msg(console_id, f'🆘 Exception: {ex} <count: {e} >')

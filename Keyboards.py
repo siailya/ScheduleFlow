@@ -19,8 +19,8 @@ class Keyboards:
         keyboard = VkKeyboard(one_time=False)
         if c:
             keyboard.add_button('Расписание', color=VkKeyboardColor.DEFAULT)
-        keyboard.add_button('Общее расписание', color=VkKeyboardColor.DEFAULT)
         keyboard.add_line()
+        keyboard.add_button('Общее расписание', color=VkKeyboardColor.DEFAULT)
         keyboard.add_button('Расписание звонков', color=VkKeyboardColor.DEFAULT)
         keyboard.add_line()
         keyboard.add_button('Настройки', color=VkKeyboardColor.PRIMARY)
