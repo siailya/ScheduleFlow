@@ -2,6 +2,7 @@ from pickle import load
 
 import vk_api.vk_api
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
+from vk_api.utils import get_random_id
 
 from Inbox import *
 
@@ -36,9 +37,8 @@ class Bot:
     def main(self):
         for event in self.long_poll.listen():
             if event.type == VkBotEventType.MESSAGE_NEW:
-                if event.obj.text:
-                    self.inbox(event)
-                    write_base(self.base, self.stat)
+                self.inbox(event)
+                write_base(self.base, self.stat)
 
     def inbox(self, event):
         Inbox(self.vk, event, self.base, self.stat)

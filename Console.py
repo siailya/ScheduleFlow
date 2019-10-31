@@ -1,20 +1,28 @@
-from vk_api.utils import get_random_id
+from os import path, remove
 
+from vk_api import VkUpload
+from vk_api.utils import get_random_id
+from pendulum import today, date
 from Constantes import Constantes as cst
 from Keyboards import Keyboards
 from Process import download_all
-from Utilities import get_schedule_date
+import matplotlib.pyplot as plt
+from Utilities import get_schedule_date, get_picture
 
 
 class Console:
-    def __init__(self, vk_api, event, base, stat):
-        self.base = base
+    def __init__(self, vk_api, event, base, stat, vk):
         self.vk_api = vk_api
+        self.vk = vk
+        self.base = base
         self.stat = stat
-        self.console(event)
+        if event.obj.text:
+            self.console(event)
+        else:
+            self.send_console('Очень интересно')
 
     def console(self, event):
-        Keyboards(self.vk_api).conslole_keyboard()
+        # Keyboards(self.vk_api).conslole_keyboard()
         msg = event.obj.text.lower().replace('@', '')
         if msg == '[club187161295|scheduleflow] пользователи':
             u = 'Список юзеров:\n'
@@ -29,8 +37,17 @@ class Console:
                     u = ''
             self.send_console(u)
         elif msg == '[club187161295|scheduleflow] обновить':
-            download_all()
-            self.send_console(f'Расписание на {get_schedule_date()} обновлено!')
+            if path.exists(f'source/{get_schedule_date()}.png'):
+                remove(f'source/{get_schedule_date()}.png')
+                if path.exists(f'uploaded_photo/{get_schedule_date()}.sf'):
+                    remove(f'uploaded_photo/{get_schedule_date()}.sf')
+                get_picture()
+                download_all()
+                self.send_console(f'Расписание на {get_schedule_date()} обновлено!')
+            else:
+                self.send_console(f'Кажется, обновлять нечего!')
+                download_all()
+                self.send_console(f'Расписание на {get_schedule_date()} загружено!')
         elif msg == '[club187161295|scheduleflow] статистика':
             self.send_console(f'Число запросов расписания: '
                               f'{self.stat["requests"]}\nЧисло юзеров: '
@@ -66,6 +83,21 @@ class Console:
                               f'{self.stat["users"]}\n'
                               f'Благодарностей: {self.stat["thank"]}\n\n'
                               f'{c_state}\n\n{p_state}')
+
+            plt.rcParams.update({'font.size': 5})
+            fig1, (ax1, ax2) = plt.subplots(nrows=2, ncols=1, figsize=(4, 4))
+            labels = cls_us.keys()
+            values = cls_us.values()
+            ax1.bar(labels, values)
+
+            labels = p_us.keys()
+            values = p_us.values()
+            ax2.bar(labels, values)
+            plt.savefig(f'statistic/stat'
+                        f'{date(today().year, today().month, today().day).__format__("DD.MM.YYYY")}.png')
+            self.send_photo_console(f'statistic/'
+                                    f'stat{date(today().year, today().month, today().day).__format__("DD.MM.YYYY")}.png', 'Статистика')
+
         elif 'общая рассылка лс' in msg:
             ms = event.obj.text[18:]
             count = 0
@@ -76,7 +108,7 @@ class Console:
                     count += 1
                 except:
                     er += 1
-            self.send_console(f'Отправлено: {count}\nОшибок; {er}')
+            self.send_console(f'Отправлено: {count}\nОшибок: {er}')
         elif 'сообщение юзеру' in msg:
             idu, ms = event.obj.text[16:].split('_')
             self.send_msg(idu, ms)
@@ -105,7 +137,17 @@ class Console:
                         er += 1
             self.send_console(f'Отправлено: {count}\nОшибок: {er}')
         elif 'ответ' in msg:
-            print(event.obj)
+            if 'reply_message' in event.obj.keys():
+                try:
+                    reply_text = event.obj.text[6:]
+                    reply = event.obj.reply_message['text']
+                    reply_id = reply[reply.find('[') + 1:reply.find('|')][2:]
+                    self.send_msg(reply_id, reply_text)
+                    self.send_console('Ответ отправлен!')
+                except:
+                    self.send_console('Хороший тамада и конкурсы интересные')
+            else:
+                self.send_console('Сообщение мне перешли')
 
     def send_console(self, message):
         self.vk_api.messages.send(peer_id=cst.console_id,
@@ -116,3 +158,12 @@ class Console:
         self.vk_api.messages.send(peer_id=send_id,
                                   message=message,
                                   random_id=get_random_id())
+
+    def send_photo_console(self, root='img.png', msg=''):
+        self.upload = VkUpload(self.vk)
+        response = self.upload.photo_messages(root)[0]
+        attachment = f'photo{response["owner_id"]}_{response["id"]}_{response["access_key"]}'
+        self.vk_api.messages.send(peer_id=cst.console_id,
+                                  message=msg,
+                                  random_id=get_random_id(),
+                                  attachment=attachment)

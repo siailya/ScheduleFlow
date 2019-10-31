@@ -3,7 +3,6 @@ from pickle import load
 from random import randint
 
 import pendulum
-from transliterate import translit
 from vk_api import VkUpload
 from vk_api.utils import get_random_id
 
@@ -21,12 +20,45 @@ class User:
         self.vk_api = self.vk.get_api()
         self.base = base
         self.stat = stat
-        self.upload = VkUpload(self.vk)
-        self.user(event)
+        if event.obj.text:
+            self.user(event)
+        else:
+            self.no_text(event)
         self.schedules = {}
+
+    def no_text(self, event):
+        u_id = event.obj.peer_id
+        name, last = self.user_get(u_id)
+        if 'attachments' in event.obj.keys():
+            att = event.obj.attachments
+            if att[0]['type'] == 'sticker':
+                self.set_activity(u_id)
+                self.send_console(f'Сообщение от: @id{u_id}({name} {last})\nОтправил(а) стикер')
+                self.send_msg(u_id, cst.stickers[randint(0, 3)])
+            elif att[0]['type'] == 'photo':
+                pic_url = att[0]['photo']['sizes'][-1]['url']
+                self.set_activity(u_id)
+                self.send_console(f'Сообщение от: @id{u_id}({name} {last})\nОтправил(а) '
+                                  f'катинку:\n{pic_url}')
+                self.send_msg(u_id, cst.pics[randint(0, 2)])
+            elif att[0]['type'] == 'audio':
+                self.set_activity(u_id)
+                self.send_console(f'Сообщение от: @id{u_id}({name} {last})\nОтправил(а) аудио')
+                if randint(1, 100) > 50:
+                    self.send_msg(u_id, cst.music[randint(0, 1)])
+                else:
+                    att = 'photo-187161295_457241548'
+                    self.send_attachment(u_id, 'Ах...', att)
+            else:
+                self.send_console(f'Сообщение от: @id{u_id}({name} {last})\nОтправил(а) какое-то '
+                                  f'необрабатываемое сообщение...')
+        else:
+            self.send_console(f'Сообщение от: @id{u_id}({name} {last})\nОтправил(а) какое-то '
+                              f'непонятное сообщение...')
 
     def user(self, event):
         u_id = event.obj.peer_id
+        self.set_activity(u_id)
         msg = event.obj.text.lower()
         name, last = self.user_get(u_id)
         if u_id not in cst.admins:
@@ -34,13 +66,13 @@ class User:
                 self.send_msg(cst.console_id, f'Сообщение от: @id{u_id}({name} {last}) '
                                               f'({self.base[u_id][2]})\n'
                                               f'{event.obj.text}')
-                print(translit(f'Сообщение от: @id{u_id}({name} {last}) ({self.base[u_id][2]})'
-                               f'\n{event.obj.text}', reversed=True))
+                # print(translit(f'Сообщение от: @id{u_id}({name} {last}) ({self.base[u_id][2]})'
+                #                f'\n{event.obj.text}', reversed=True))
             else:
                 self.send_msg(cst.console_id, f'Сообщение от: @id{u_id}({name} {last})\n'
                                               f'{event.obj.text}')
-                print(translit(f'Сообщение от: @id{u_id}({name} {last})\n{event.obj.text}',
-                               reversed=True))
+                # print(translit(f'Сообщение от: @id{u_id}({name} {last})\n{event.obj.text}',
+                #                reversed=True))
         # Регистрация нового пользователя
         if u_id not in self.base.keys():
             self.base.update({u_id: [name, last, 'Ns', 0]})
@@ -171,11 +203,45 @@ class User:
                                 ' | '.join([s[:-9] for s in listdir('source')])
                         self.send_msg(u_id, f'Ошибка! Скорее всего, вы некорректно указали '
                                             f'дату\n\n{dates}')
-
+                elif msg.replace(' ', '').replace('"', '').upper() in cst.classes:
+                    cls = msg.replace(' ', '').replace('"', '').upper()
+                    self.stat['requests'] = self.stat.get('requests', 0) + 1
+                    write_base(self.base, self.stat)
+                    if path.exists(f'uploaded_photo/{get_schedule_date()}.sf'):
+                        self.load_schedule()
+                        self.send_attachment(u_id, f'Держи расписание {cls} класса на '
+                                                   f'{get_schedule_date()} '
+                                                   f'{cst.smiles_answer[randint(0, 13)]}',
+                                             self.schedules[cls])
+                    else:
+                        self.send_msg(u_id, f'Сейчас постараюсь найти расписание на '
+                                            f'{get_schedule_date()}\nПридется чуть-чуть '
+                                            f'подождать...\nЕсли '
+                                            f'прошло больше 20 '
+                                            f'секунд '
+                                            f'- скорее всего, все идет по плану! '
+                                            f'{cst.smiles_answer[randint(0, 13)]}')
+                        download_all()
+                        self.load_schedule()
+                        try:
+                            self.send_attachment(u_id, f'Держи расписание {cls} класса на '
+                                                       f'{get_schedule_date()} '
+                                                       f'{cst.smiles_answer[randint(0, 13)]}',
+                                                 self.schedules[cls])
+                        except:
+                            self.send_msg(u_id, cst.error)
                 elif msg == 'расписание звонков':
                     ring_schedule(self.vk_api, u_id)
                 elif msg == 'настройки':
                     Keyboards(self.vk_api).service_keyboard(u_id)
+                elif msg == 'помощь':
+                    self.send_msg(u_id, 'Мы отправили просьбу о помощи в техподдержку! Если '
+                                        'разработчиков не забрали инопланетяне, они скоро '
+                                        'свяжутся с вами!\nПока что прочитайте FAQ: vk.com/@scheduleflow-faq-moi-faq')
+                    self.vk_api.messages.send(user_ids=cst.admins,
+                                              message=f'Пользователь @id{u_id} запросил помощь!'
+                                                      f'\nvk.com/gim187161295?sel={u_id}',
+                                              random_id=get_random_id())
                 elif msg == 'сменить класс':
                     Keyboards(self.vk_api).class_keyboard(u_id)
                     self.base[u_id][3] = 0
@@ -188,11 +254,21 @@ class User:
                     self.send_msg(u_id, cst.answers[randint(0, len(cst.answers) - 1)])
                 elif 'дарова' in msg:
                     self.send_msg(u_id, 'Ну дарова, карова')
+                else:
+                    if randint(0, 150) >= 50:
+                        self.send_msg(u_id, cst.uni[randint(0, len(cst.uni) - 1)])
+                    else:
+                        self.vk_api.messages.markAsRead(peer_id=u_id)
 
     def send_console(self, message):
         self.vk_api.messages.send(peer_id=cst.console_id,
                                   message=message,
                                   random_id=get_random_id())
+
+    def set_activity(self, uid):
+        self.vk_api.messages.setActivity(type='typing',
+                                         peer_id=uid,
+                                         group_id=cst.group_id)
 
     def send_msg(self, send_id, message):
         self.vk_api.messages.send(peer_id=send_id,
@@ -204,6 +280,7 @@ class User:
         return info['first_name'], info['last_name']
 
     def send_photo(self, send_id, root='img.png', msg=''):
+        self.upload = VkUpload(self.vk)
         response = self.upload.photo_messages(root)[0]
         attachment = f'photo{response["owner_id"]}_{response["id"]}_{response["access_key"]}'
         self.vk_api.messages.send(peer_id=send_id,

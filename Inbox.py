@@ -16,9 +16,11 @@ class Inbox:
         self.peer_id = event.obj.peer_id
 
         if self.peer_id == cst.console_id:
-            Console(self.vk_api, event, self.base, self.stat)
-        else:
+            Console(self.vk_api, event, self.base, self.stat, self.vk)
+        elif self.peer_id < cst.console_id:
             User(self.vk, event, self.base, self.stat)
+        else:
+            print('Conference')
 
         write_base(self.base, self.stat)
 

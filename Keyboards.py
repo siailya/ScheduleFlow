@@ -71,6 +71,7 @@ class Keyboards:
     def service_keyboard(self, send_id):
         keyboard = VkKeyboard(one_time=False)
         keyboard.add_button('Сменить класс', color=VkKeyboardColor.DEFAULT)
+        keyboard.add_button('Помощь', color=VkKeyboardColor.DEFAULT)
         keyboard.add_line()
         keyboard.add_button('Назад', color=VkKeyboardColor.PRIMARY)
         self.vk_api.messages.send(peer_id=send_id, random_id=get_random_id(),

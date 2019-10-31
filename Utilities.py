@@ -1,5 +1,4 @@
 from os import path, mkdir
-from shutil import move
 import requests
 from pendulum import today, tomorrow, date, now
 from vk_api import vk_api
@@ -17,12 +16,12 @@ def get_schedule_date():
     if td == 6:
         return tomorrow().date().__format__('DD.MM.YYYY')
     elif td in [0, 1, 2, 3, 4]:
-        if (hr >= 14) and ((hr <= 23) and (mt <= 59)):
+        if (hr >= 13) and ((hr <= 23) and (mt <= 59)):
             return tomorrow().date().__format__('DD.MM.YYYY')
         else:
             return today().date().__format__('DD.MM.YYYY')
     else:
-        if (hr >= 14) and ((hr <= 23) and (mt <= 59)):
+        if (hr >= 13) and ((hr <= 23) and (mt <= 59)):
             if tomorrow().day + 1 in [30, 31]:
                 if mtt in [1, 3, 5, 7, 8, 10, 12]:
                     if tomorrow().day + 1 == 31:
@@ -60,15 +59,14 @@ def upload_class(cls, upload):
 def get_picture(date=get_schedule_date()):
     if not path.exists('source'):
         mkdir('source')
-    if path.exists('source'):
+    else:
         name = date + ".png"
         if not path.exists(f'source/{name}'):
             url = 'http://school37.com/news/data/upimages/' + date + '.png'
             p = requests.get(url)
-            out = open(name, "wb")
+            out = open(f'source/{name}', "wb")
             out.write(p.content)
             out.close()
-            move(name, f'source/{name}')
 
 
 def gratitude(msg):
