@@ -75,7 +75,7 @@ class User:
                 #                reversed=True))
         # Регистрация нового пользователя
         if u_id not in self.base.keys():
-            self.base.update({u_id: [name, last, 'Ns', 0]})
+            self.base.update({u_id: [name, last, 'Ns', 0, 1]})
             self.stat['users'] = self.stat.get('users', 0) + 1
             write_base(self.base, self.stat)
             self.send_msg(u_id, f'Привет, {name}! Давай настроим бота под тебя. Тебе нужно просто '
@@ -233,20 +233,8 @@ class User:
                 elif msg == 'расписание звонков':
                     ring_schedule(self.vk_api, u_id)
                 elif msg == 'настройки':
-                    Keyboards(self.vk_api).service_keyboard(u_id)
-                elif msg == 'помощь':
-                    self.send_msg(u_id, 'Мы отправили просьбу о помощи в техподдержку! Если '
-                                        'разработчиков не забрали инопланетяне, они скоро '
-                                        'свяжутся с вами!\nПока что прочитайте FAQ: vk.com/@scheduleflow-faq-moi-faq')
-                    self.vk_api.messages.send(user_ids=cst.admins,
-                                              message=f'Пользователь @id{u_id} запросил помощь!'
-                                                      f'\nvk.com/gim187161295?sel={u_id}',
-                                              random_id=get_random_id())
-                elif msg == 'сменить класс':
-                    Keyboards(self.vk_api).class_keyboard(u_id)
-                    self.base[u_id][3] = 0
-                elif msg == 'назад':
-                    Keyboards(self.vk_api).menu_keyboard(u_id)
+                    self.base[u_id][3] = 3
+                    Keyboards(self.vk_api).service_keyboard(u_id, self.base[u_id][4])
                 elif smile(msg):
                     self.send_msg(u_id, cst.smiles_answer[randint(0, 13)])
                 elif gratitude(msg):
@@ -259,6 +247,33 @@ class User:
                         self.send_msg(u_id, cst.uni[randint(0, len(cst.uni) - 1)])
                     else:
                         self.vk_api.messages.markAsRead(peer_id=u_id)
+            elif self.base[u_id][3] == 3:
+                if msg == 'помощь':
+                    self.send_msg(u_id, 'Мы отправили просьбу о помощи в техподдержку! Если '
+                                        'разработчиков не забрали инопланетяне, они скоро '
+                                        'свяжутся с вами!\nПока что прочитайте FAQ: vk.com/@scheduleflow-faq-moi-faq')
+                    self.vk_api.messages.send(user_ids=cst.admins,
+                                              message=f'Пользователь @id{u_id} запросил помощь!'
+                                                      f'\nvk.com/gim187161295?sel={u_id}',
+                                              random_id=get_random_id())
+                elif msg == 'сменить класс':
+                    Keyboards(self.vk_api).class_keyboard(u_id)
+                    self.base[u_id][3] = 0
+                elif msg == 'назад':
+                    Keyboards(self.vk_api).menu_keyboard(u_id)
+                    self.base[u_id][3] = 2
+                elif msg == 'выключить уведомления':
+                    self.base[u_id][4] = 0
+                    Keyboards(self.vk_api).service_keyboard(u_id, 0, 'Уведомления выключены!')
+                    self.send_console(f'Пользователь @id{u_id}({self.base[u_id][0]} '
+                                      f'{self.base[u_id][1]}) выключил уведомления')
+                elif msg == 'включить уведомления':
+                    self.base[u_id][4] = 1
+                    Keyboards(self.vk_api).service_keyboard(u_id, 1, 'Уведомления включены!')
+                    self.send_console(f'Пользователь @id{u_id}({self.base[u_id][0]} '
+                                      f'{self.base[u_id][1]}) включил уведомления')
+                else:
+                    self.send_msg(u_id, 'Чтобы продолжить работу, выйдите из панели управления 😉')
 
     def send_console(self, message):
         self.vk_api.messages.send(peer_id=cst.console_id,

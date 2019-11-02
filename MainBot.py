@@ -16,23 +16,10 @@ class Bot:
         self.base = {}  # {user_id: [name, last, class, state]}
         self.stat = {}  # {requests: count, userBs: count, thank: count}
 
-        # if not path.exists('tmp'):
-        #     mkdir('tmp')
-        if not path.exists('log'):
-            mkdir('log')
-        if not path.exists('uploaded_photo'):
-            mkdir('uploaded_photo')
-        if not path.exists('data'):
-            mkdir('data')
-            pt = 'data/base.pickle'
-            fi = open(pt, 'wb')
-            fi.close()
-
-            pt = 'data/stat.pickle'
-            fi = open(pt, 'wb')
-            fi.close()
-        else:
+        try:
             self.open_base()
+        except:
+            pass
 
     def main(self):
         for event in self.long_poll.listen():
@@ -59,21 +46,34 @@ class Bot:
 
 
 if __name__ == "__main__":
-    Bot().main()
-    # console_id = cst.console_id
-    # print(f'{cst.ver}')
-    # if not path.exists(get_schedule_date()):
-    #     print('Loading schedules for current date')
-    #     download_all()
-    #     print('Loaded!')
-    # else:
-    #     print()
-    # print('====== Work started ======')
-    # Bot().send_msg(console_id, f'Запущен! Версия {cst.ver}')
-    # e = 0
-    # while e <= 300:
-    #     try:
-    #         Bot().main()
-    #     except BaseException as ex:
-    #         e += 1
-    #         Bot().send_msg(console_id, f'🆘 Exception: {ex} <count: {e} >')
+    # Bot().main()
+    console_id = cst.console_id
+    print(f'{cst.ver}')
+    if not path.exists('log'):
+        mkdir('log')
+    if not path.exists('uploaded_photo'):
+        mkdir('uploaded_photo')
+    if not path.exists('data'):
+        mkdir('data')
+        pt = 'data/base.pickle'
+        fi = open(pt, 'wb')
+        fi.close()
+
+        pt = 'data/stat.pickle'
+        fi = open(pt, 'wb')
+        fi.close()
+    if not path.exists(f'uploaded_photo/{get_schedule_date()}.sf'):
+        print('Loading schedules for current date')
+        download_all()
+        print('Loaded!')
+    else:
+        print()
+    print('====== Work started ======')
+    Bot().send_msg(console_id, f'Запущен! Версия {cst.ver}')
+    e = 0
+    while e <= 300:
+        try:
+            Bot().main()
+        except BaseException as ex:
+            e += 1
+            Bot().send_msg(console_id, f'🆘 Exception: {ex} <count: {e} >')

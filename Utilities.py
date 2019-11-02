@@ -70,9 +70,10 @@ def get_picture(date=get_schedule_date()):
 
 
 def gratitude(msg):
-    if len(set(msg.split()) & {'спасибо', 'спс', 'пасиб', 'сенкс', 'thank', 'от души',
-                               'благодарю', 'мерси'}) >= 1:
-        return True
+    for i in ['спасибо', 'спс', 'пасиб', 'сенкс', 'thank', 'от души','благодарю', 'мерси',
+              'спасибо!', 'пасиба', 'пасибо']:
+        if msg in i or i in msg:
+            return True
     return False
 
 

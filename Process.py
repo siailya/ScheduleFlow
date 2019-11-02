@@ -1,6 +1,6 @@
 from os import remove, mkdir, path, rmdir
 from pickle import dump
-from shutil import copy
+from shutil import copy, rmtree
 
 import cv2
 import numpy as np
@@ -214,9 +214,10 @@ def download_all(date=get_schedule_date()):
     if c:
         with open(f'uploaded_photo/{d}.sf', 'wb') as f:
             dump(attachments, f)
-    if c:
         with open(f'log/log_{now().__format__("DD.MM HH:mm")}.txt', encoding='u8', mode='r') as f:
             send_console(f'Лог загрузки расписания на {str(d)}:\n\n{f.read()}')
+        if not cst.save_files:
+            rmtree(f'{get_schedule_date()}', )
     else:
         send_console(f'Лог загрузки расписания на {str(d)}:\nОдни ошибки')
 

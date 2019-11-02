@@ -1,13 +1,15 @@
 from os import path, remove
+from pickle import load
+from random import randint
 
 from vk_api import VkUpload
 from vk_api.utils import get_random_id
 from pendulum import today, date
 from Constantes import Constantes as cst
-from Keyboards import Keyboards
 from Process import download_all
 import matplotlib.pyplot as plt
 from Utilities import get_schedule_date, get_picture
+from Base import write_base
 
 
 class Console:
@@ -16,10 +18,12 @@ class Console:
         self.vk = vk
         self.base = base
         self.stat = stat
+        self.schedules = {}
         if event.obj.text:
             self.console(event)
         else:
-            self.send_console('Очень интересно')
+            if randint(0, 100) >= 90:
+                self.send_console('Очень интересно')
 
     def console(self, event):
         # Keyboards(self.vk_api).conslole_keyboard()
@@ -148,11 +152,43 @@ class Console:
                     self.send_console('Хороший тамада и конкурсы интересные')
             else:
                 self.send_console('Сообщение мне перешли')
+        elif 'удалить' in msg:
+            uid = msg.lstrip('удалить ')
+            p = self.base.pop(int(uid), 0)
+            if p:
+                self.send_console(f'Пользователь @id{uid} удален')
+            else:
+                self.send_console('Не удален...')
+            write_base(self.base, self.stat)
+            print(self.base)
+        elif 'рассылка расписания' in msg:
+            self.load_schedule()
+            k = 0
+            e = 0
+            for i in self.base.keys():
+                if self.base[i][4] == 1:
+                    try:
+                        self.send_attachment(i, f'Держи расписание на завтра! ;-)',
+                                             self.schedules[self.base[i][2].upper()])
+                        k += 1
+                    except:
+                        e += 1
+            self.send_console(f'Отправлено: {k}\nОшибок: {e}')
 
     def send_console(self, message):
         self.vk_api.messages.send(peer_id=cst.console_id,
                                   message=message,
                                   random_id=get_random_id())
+
+    def load_schedule(self):
+        with open(f'uploaded_photo/{get_schedule_date()}.sf', 'rb') as f:
+            self.schedules = load(f)
+
+    def send_attachment(self, send_id, msg, attachment):
+        self.vk_api.messages.send(peer_id=send_id,
+                                  message=msg,
+                                  random_id=get_random_id(),
+                                  attachment=attachment)
 
     def send_msg(self, send_id, message):
         self.vk_api.messages.send(peer_id=send_id,
