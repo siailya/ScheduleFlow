@@ -13,6 +13,8 @@ def get_schedule_date():
     yr = tomorrow().year
     mtt = tomorrow().month
     td = now().weekday()
+    if now().date().__format__('DD.MM.YYYY') in ['03.11.2019', '04.11.2019']:
+        return '05.11.2019'
     if td == 6:
         return tomorrow().date().__format__('DD.MM.YYYY')
     elif td in [0, 1, 2, 3, 4]:
@@ -62,7 +64,7 @@ def get_picture(date=get_schedule_date()):
     else:
         name = date + ".png"
         if not path.exists(f'source/{name}'):
-            url = 'http://school37.com/news/data/upimages/' + date + '.png'
+            url = 'амтэк35.рф/wp-content/gallery/schedule/' + date + '.png'
             p = requests.get(url)
             out = open(f'source/{name}', "wb")
             out.write(p.content)
