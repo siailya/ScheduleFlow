@@ -243,7 +243,7 @@ class User:
                 elif 'дарова' in msg:
                     self.send_msg(u_id, 'Ну дарова, карова')
                 else:
-                    if randint(0, 150) >= 50:
+                    if randint(0, 150) >= 100:
                         self.send_msg(u_id, cst.uni[randint(0, len(cst.uni) - 1)])
                     else:
                         self.vk_api.messages.markAsRead(peer_id=u_id)

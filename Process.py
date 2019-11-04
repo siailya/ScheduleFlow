@@ -164,6 +164,8 @@ def download_all(date=get_schedule_date()):
     c = True
     if not path.exists(str(d)):
         mkdir(str(d))
+    if not path.exists(f'source/{d}.png'):
+        get_picture(d)
 
     o = ['А', 'Б', 'В', 'Г']
     for i in range(5, 12):
@@ -172,7 +174,7 @@ def download_all(date=get_schedule_date()):
                 cl = str(i) + o[j]
                 try:
                     ScheduleFlow(cl, cl, d)
-                    attachments.update({cl: upload_class(cl, upload)})
+                    attachments.update({cl: upload_class(cl, upload, d)})
                 except BaseException as k:
                     e += 1
                     print(translit(f'\nОшибка {k} ', language_code='ru', reversed=True))
@@ -188,7 +190,7 @@ def download_all(date=get_schedule_date()):
                 cl = str(i) + o[j]
                 try:
                     ScheduleFlow(cl, cl, d)
-                    attachments.update({cl: upload_class(cl, upload)})
+                    attachments.update({cl: upload_class(cl, upload, d)})
                 except BaseException as k:
                     e += 1
                     print(translit(f'\nОшибка {k} ', language_code='ru', reversed=True))

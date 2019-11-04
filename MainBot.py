@@ -46,7 +46,6 @@ class Bot:
 
 
 if __name__ == "__main__":
-    # Bot().main()
     console_id = cst.console_id
     print(f'{cst.ver}')
     if not path.exists('log'):

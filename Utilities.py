@@ -13,8 +13,6 @@ def get_schedule_date():
     yr = tomorrow().year
     mtt = tomorrow().month
     td = now().weekday()
-    if now().date().__format__('DD.MM.YYYY') in ['03.11.2019', '04.11.2019']:
-        return '05.11.2019'
     if td == 6:
         return tomorrow().date().__format__('DD.MM.YYYY')
     elif td in [0, 1, 2, 3, 4]:
@@ -52,8 +50,8 @@ def send_console(s):
                               random_id=get_random_id())
 
 
-def upload_class(cls, upload):
-    response = upload.photo_messages(f'{get_schedule_date()}/{cls}.png')[0]
+def upload_class(cls, upload, date):
+    response = upload.photo_messages(f'{date}/{cls}.png')[0]
     attachment = f'photo{response["owner_id"]}_{response["id"]}_{response["access_key"]}'
     return attachment
 
@@ -64,7 +62,7 @@ def get_picture(date=get_schedule_date()):
     else:
         name = date + ".png"
         if not path.exists(f'source/{name}'):
-            url = 'амтэк35.рф/wp-content/gallery/schedule/' + date + '.png'
+            url = 'http://amtek.org/news/data/upimages/' + date + '.png'
             p = requests.get(url)
             out = open(f'source/{name}', "wb")
             out.write(p.content)
@@ -74,7 +72,7 @@ def get_picture(date=get_schedule_date()):
 def gratitude(msg):
     for i in ['спасибо', 'спс', 'пасиб', 'сенкс', 'thank', 'от души','благодарю', 'мерси',
               'спасибо!', 'пасиба', 'пасибо']:
-        if msg in i or i in msg:
+        if msg == i or i in msg:
             return True
     return False
 

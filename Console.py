@@ -105,41 +105,41 @@ class Console:
         elif 'общая рассылка лс' in msg:
             ms = event.obj.text[18:]
             count = 0
-            er = 0
+            er = []
             for i in self.base.keys():
                 try:
                     self.send_msg(i, ms)
                     count += 1
                 except:
-                    er += 1
-            self.send_console(f'Отправлено: {count}\nОшибок: {er}')
+                    er.append(i)
+            self.send_console(f'Отправлено: {count}\nОшибок: {" ".join(er)}')
         elif 'сообщение юзеру' in msg:
             idu, ms = event.obj.text[16:].split('_')
             self.send_msg(idu, ms)
         elif 'рассылка класс' in msg:
             cls, text = event.obj.text[15:].split('_')
             count = 0
-            er = 0
+            er = []
             for i in self.base.keys():
                 if self.base[i][2] == cls.lower():
                     try:
                         self.send_msg(i, text)
                         count += 1
                     except:
-                        er += 1
-                self.send_console(f'Отправлено: {count}\nОшибок: {er}')
+                        er.append(i)
+                self.send_console(f'Отправлено: {count}\nОшибок: {" ".join(er)}')
         elif 'рассылка параллель' in msg:
             pr, ms = event.obj.text[19:].split('_')
             count = 0
-            er = 0
+            er = []
             for i in self.base.keys():
                 if pr in self.base[i][2]:
                     try:
                         self.send_msg(i, ms)
                         count += 1
                     except:
-                        er += 1
-            self.send_console(f'Отправлено: {count}\nОшибок: {er}')
+                        er.append(i)
+            self.send_console(f'Отправлено: {count}\nОшибки: {" ".join(er)}')
         elif 'ответ' in msg:
             if 'reply_message' in event.obj.keys():
                 try:
@@ -164,7 +164,7 @@ class Console:
         elif 'рассылка расписания' in msg:
             self.load_schedule()
             k = 0
-            e = 0
+            e = []
             for i in self.base.keys():
                 if self.base[i][4] == 1:
                     try:
@@ -172,8 +172,8 @@ class Console:
                                              self.schedules[self.base[i][2].upper()])
                         k += 1
                     except:
-                        e += 1
-            self.send_console(f'Отправлено: {k}\nОшибок: {e}')
+                        e.append(i)
+            self.send_console(f'Отправлено: {k}\nОшибки: {" ".join(e)}')
 
     def send_console(self, message):
         self.vk_api.messages.send(peer_id=cst.console_id,
