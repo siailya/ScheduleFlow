@@ -157,10 +157,12 @@ def download_all(date=get_schedule_date()):
     attachments = {}
     if not path.exists('log'):
         mkdir('log')
-    with open(f'log/log_{now().__format__("DD.MM HH:mm")}.txt', encoding='u8', mode='w') as f:
-        f.write(f'{pendulum.now().__format__("HH:mm DD.MM.YYYY")}\n')
+    with open(f'log/log_{now(tz="Europe/Moscow").__format__("DD.MM HH:mm")}.txt', encoding='u8', mode='w') as f:
+        f.write(f'{pendulum.now(tz="Europe/Moscow").__format__("HH:mm DD.MM.YYYY")}\nЗагрузка на'
+                f' {get_schedule_date()}\n')
     e = 0
     d = date
+    print(d)
     c = True
     if not path.exists(str(d)):
         mkdir(str(d))

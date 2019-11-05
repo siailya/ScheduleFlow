@@ -1,4 +1,5 @@
 from pickle import load
+from time import sleep
 
 import vk_api.vk_api
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
@@ -68,11 +69,17 @@ if __name__ == "__main__":
     else:
         print()
     print('====== Work started ======')
-    Bot().send_msg(console_id, f'Запущен! Версия {cst.ver}')
+    try:
+        Bot().send_msg(console_id, f'Запущен! Версия {cst.ver}')
+    except:
+        sleep(60)
     e = 0
     while e <= 300:
         try:
             Bot().main()
         except BaseException as ex:
             e += 1
-            Bot().send_msg(console_id, f'🆘 Exception: {ex} <count: {e} >')
+            try:
+                Bot().send_msg(console_id, f'🆘 Exception: {ex} <count: {e} >')
+            except:
+                sleep(60)

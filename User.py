@@ -175,7 +175,7 @@ class User:
                                 download_all(date)
                                 with open(f'uploaded_photo/{date}.sf', 'rb') as f:
                                     self.schedules = load(f)
-                                self.send_attachment(u_id, f'Держи расписание {cls.upper} класса на '
+                                self.send_attachment(u_id, f'Держи расписание {cls.upper()} класса на '
                                                            f'{date} {cst.smiles_answer[randint(0, 13)]}',
                                                      self.schedules[cls.upper()])
                             else:
@@ -203,6 +203,9 @@ class User:
                                 ' | '.join([s[:-9] for s in listdir('source')])
                         self.send_msg(u_id, f'Ошибка! Скорее всего, вы некорректно указали '
                                             f'дату\n\n{dates}')
+                # elif '.' in msg:
+                #     if len(msg.split('.')) == 2:
+                #         self.send_msg(u_id, 'Функция с датой в разработке :)')
                 elif msg.replace(' ', '').replace('"', '').upper() in cst.classes:
                     cls = msg.replace(' ', '').replace('"', '').upper()
                     self.stat['requests'] = self.stat.get('requests', 0) + 1
@@ -242,6 +245,8 @@ class User:
                     self.send_msg(u_id, cst.answers[randint(0, len(cst.answers) - 1)])
                 elif 'дарова' in msg:
                     self.send_msg(u_id, 'Ну дарова, карова')
+                elif 'забей' in msg:
+                    self.send_msg(u_id, 'Не ну это реально забей')
                 else:
                     if randint(0, 150) >= 100:
                         self.send_msg(u_id, cst.uni[randint(0, len(cst.uni) - 1)])

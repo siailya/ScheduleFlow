@@ -4,7 +4,7 @@ from random import randint
 
 from vk_api import VkUpload
 from vk_api.utils import get_random_id
-from pendulum import today, date
+from pendulum import today, date, now
 from Constantes import Constantes as cst
 from Process import download_all
 import matplotlib.pyplot as plt
@@ -41,17 +41,16 @@ class Console:
                     u = ''
             self.send_console(u)
         elif msg == '[club187161295|scheduleflow] обновить':
+            self.send_console(f'Сейчас {now(tz="Europe/Moscow").time().__format__("HH:mm")}'
+                              f' {get_schedule_date()}\nЗагрузка расписания')
             if path.exists(f'source/{get_schedule_date()}.png'):
                 remove(f'source/{get_schedule_date()}.png')
-                if path.exists(f'uploaded_photo/{get_schedule_date()}.sf'):
-                    remove(f'uploaded_photo/{get_schedule_date()}.sf')
-                get_picture()
-                download_all()
-                self.send_console(f'Расписание на {get_schedule_date()} обновлено!')
-            else:
-                self.send_console(f'Кажется, обновлять нечего!')
-                download_all()
-                self.send_console(f'Расписание на {get_schedule_date()} загружено!')
+            get_picture()
+            if path.exists(f'uploaded_photo/{get_schedule_date()}.sf'):
+                remove(f'uploaded_photo/{get_schedule_date()}.sf')
+            download_all()
+            self.send_console(f'Расписание на {get_schedule_date()} обновлено!')
+
         elif msg == '[club187161295|scheduleflow] статистика':
             self.send_console(f'Число запросов расписания: '
                               f'{self.stat["requests"]}\nЧисло юзеров: '
@@ -140,7 +139,7 @@ class Console:
                     except:
                         er.append(i)
             self.send_console(f'Отправлено: {count}\nОшибки: {" ".join(er)}')
-        elif 'ответ' in msg:
+        elif 'ответ' in msg[:7]:
             if 'reply_message' in event.obj.keys():
                 try:
                     reply_text = event.obj.text[6:]
