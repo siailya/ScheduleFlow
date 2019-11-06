@@ -43,11 +43,7 @@ class Console:
         elif msg == '[club187161295|scheduleflow] обновить':
             self.send_console(f'Сейчас {now(tz="Europe/Moscow").time().__format__("HH:mm")}'
                               f' {get_schedule_date()}\nЗагрузка расписания')
-            if path.exists(f'source/{get_schedule_date()}.png'):
-                remove(f'source/{get_schedule_date()}.png')
             get_picture()
-            if path.exists(f'uploaded_photo/{get_schedule_date()}.sf'):
-                remove(f'uploaded_photo/{get_schedule_date()}.sf')
             download_all()
             self.send_console(f'Расписание на {get_schedule_date()} обновлено!')
 

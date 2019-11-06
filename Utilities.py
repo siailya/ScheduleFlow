@@ -60,15 +60,18 @@ def get_picture(date=get_schedule_date()):
     if not path.exists('source'):
         mkdir('source')
     else:
+        if path.exists(f'source/{date}'):
+            remove(f'source/{date}')
         name = date + ".png"
-        if not path.exists(f'source/{name}'):
-            url = 'http://amtek.org/news/data/upimages/' + date + '.png'
-            p = requests.get(url)
-            out = open(f'source/{name}', "wb")
-            out.write(p.content)
-            out.close()
-            if path.getsize(f'source/{name}') < 112640:
-                remove(f'source/{name}')
+        url = 'http://amtek.org/news/data/upimages/' + date + '.png'
+        p = requests.get(url)
+        out = open(f'source/{name}', "wb")
+        out.write(p.content)
+        out.close()
+        if path.getsize(f'source/{name}') < 112640:
+            remove(f'source/{name}')
+        else:
+            print('Downloaded!')
 
 
 def gratitude(msg):
