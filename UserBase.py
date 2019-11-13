@@ -1,5 +1,5 @@
-from pickle import load, dump
 import sqlite3
+from pickle import load, dump
 
 
 def from_base():
@@ -60,4 +60,4 @@ def stat():
         print(u)
 
 
-stat()
+to_base()

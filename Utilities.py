@@ -1,4 +1,5 @@
 from os import path, mkdir, remove
+
 import requests
 from pendulum import today, tomorrow, date, now
 from vk_api import vk_api
@@ -86,3 +87,18 @@ def smile(msg):
     if len(set(list(msg)) & set(list(cst.smiles))) >= 1:
         return True
     return False
+
+
+def hello(msg):
+    p = ['привет', 'сап', 'хай']
+    if msg.lower() in p or any(i in msg for i in p):
+        return True
+    return False
+
+
+def need_out(msg):
+    commands = ['расписание', 'общее расписание', 'расписание звонков', 'настройки',
+                'сменить класс', 'назад', 'выключить уведомления', 'включить уведомления']
+    if msg in commands or 'расписание на' in msg or gratitude(msg):
+        return False
+    return True

@@ -1,19 +1,19 @@
 from math import ceil
-from os import path, remove
+from os import remove
 from pickle import load
 from random import randint
 from shutil import rmtree
-import sqlite3
 
+import matplotlib.pyplot as plt
+from pendulum import today, date
 from vk_api import VkUpload
 from vk_api.utils import get_random_id
-from pendulum import today, date, now, yesterday
+
+from Base import *
 from Constantes import Constantes as cst
 from Keyboards import Keyboards
 from Process import download_all
-import matplotlib.pyplot as plt
 from Utilities import get_schedule_date, get_picture
-from Base import write_base, get_by_id, del_by_id, get_by_name, get_id_by_class, get_all_ids, get_by_parallel
 
 
 class Console:
@@ -123,6 +123,7 @@ class Console:
                 if send_ids:
                     try:
                         self.send_schedule(send_ids, self.schedules[i], text)
+                        self.send_console(f'Отправлено расписание пользователям {i} класса!')
                     except:
                         self.send_console(f'Ошибка на {i} классе!\nКто-то не получил расписание...')
                 else:
@@ -166,9 +167,9 @@ class Console:
         ).fetchall()
         if res:
             self.send_console(f'Краткая статистика:\n'
-                              f'Юзеров: {res[0][3]}\n'
+                              f'Юзеров: {res[0][2]}\n'
                               f'Запросов: {res[0][1]}\n'
-                              f'Благодарностей: {res[0][2]}')
+                              f'Благодарностей: {res[0][3]}')
         else:
             yesterday_res = cur.execute(
                 f"""
@@ -250,7 +251,8 @@ class Console:
     def send_schedule(self, users, schedule, text=''):
         self.vk_api.messages.send(user_ids=users,
                                   attachment=schedule,
-                                  message=f'Держи расписание на завтра!\n{text}',
+                                  message=f'Держи расписание на завтра! '
+                                          f'{cst.smiles_answer[randint(0, len(cst.smiles_answer) - 1)]}\n{text}',
                                   random_id=get_random_id())
 
     def send_many_users(self, users, text):
