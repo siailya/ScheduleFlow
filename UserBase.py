@@ -1,9 +1,11 @@
+import sqlite3
 from pickle import load, dump
 
 
 def from_base():
     with open('data/base.pickle', 'rb') as f:
         u = load(f)
+        print(u)
     k = 0
     s = ''
     for i in u.keys():
@@ -34,5 +36,28 @@ def write_base():
         dump(users, f)
 
 
-print(from_base())
+def to_base():
+    with open('data/base.pickle', 'rb') as f:
+        u = load(f)
+    for i in u.keys():
+        id, name, last, cls, cls_num, cls_lit, state, notifications, requests, gratitudes = i, u[i][0], u[i][1], u[i][2], u[i][2][:-1], u[i][2][-1:], u[i][3], u[i][4], 0, 0
+        db = sqlite3.connect('data/base.db')
+        cur = db.cursor()
+        result = cur.execute(
+            """
+            INSERT INTO users (id, name, last, cls, cls_num, cls_lit, state, notifications, requests, gratitudes)
+            
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (id, name, last, cls.upper(), cls_num, cls_lit.upper(), state, notifications, requests, gratitudes)).fetchall()
+        db.commit()
+        db.close()
 
+
+def stat():
+    with open('data/stat.pickle', 'rb') as f:
+        u = load(f)
+        print(u)
+
+
+to_base()

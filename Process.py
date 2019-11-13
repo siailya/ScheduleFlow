@@ -132,9 +132,9 @@ class ScheduleFlow:
         crop_num = {
             '5': 0,
             '6': 180,
-            '7': int(180 * 2),
-            '8': int(180 * 3),
-            '9': int(180 * 4),
+            '7': int(175 * 2),
+            '8': int(175 * 3),
+            '9': int(175 * 4),
             '10': int(180 * 5),
             '11': int(180 * 6)}
         crop_x = 400
@@ -157,10 +157,13 @@ def download_all(date=get_schedule_date()):
     attachments = {}
     if not path.exists('log'):
         mkdir('log')
-    with open(f'log/log_{now().__format__("DD.MM HH:mm")}.txt', encoding='u8', mode='w') as f:
-        f.write(f'{pendulum.now().__format__("HH:mm DD.MM.YYYY")}\n')
+    with open(f'log/log_{now(tz="Europe/Moscow").__format__("DD.MM HH:mm")}.txt', encoding='u8', mode='w') as f:
+        f.write(f'{pendulum.now(tz="Europe/Moscow").__format__("HH:mm DD.MM.YYYY")}\n'
+                f'Загрузка на {get_schedule_date()}\n')
+        f.close()
     e = 0
     d = date
+    print(d)
     c = True
     if not path.exists(str(d)):
         mkdir(str(d))
@@ -178,13 +181,13 @@ def download_all(date=get_schedule_date()):
                 except BaseException as k:
                     e += 1
                     print(translit(f'\nОшибка {k} ', language_code='ru', reversed=True))
-                    with open(f'log/log_{now().__format__("DD.MM HH:mm")}.txt', encoding='u8',
-                              mode='a') as f:
+                    with open(f'log/log_{now().__format__("DD.MM HH:mm")}.txt', encoding='u8', mode='a') as f:
                         f.write(f'\nОшибка {k} ')
+                        f.close()
                 print(translit(cl, language_code='ru', reversed=True))
-                with open(f'log/log_{now().__format__("DD.MM HH:mm")}.txt', encoding='u8',
-                          mode='a') as f:
+                with open(f'log/log_{now().__format__("DD.MM HH:mm")}.txt', encoding='u8', mode='a') as f:
                     f.write(f'{cl}\n')
+                    f.close()
         else:
             for j in range(3):
                 cl = str(i) + o[j]
@@ -194,21 +197,20 @@ def download_all(date=get_schedule_date()):
                 except BaseException as k:
                     e += 1
                     print(translit(f'\nОшибка {k} ', language_code='ru', reversed=True))
-                    with open(f'log/log_{now().__format__("DD.MM HH:mm")}.txt', encoding='u8',
-                              mode='a') as f:
+                    with open(f'log/log_{now().__format__("DD.MM HH:mm")}.txt', encoding='u8', mode='a') as f:
                         f.write(f'\nОшибка {k} ')
+                        f.close()
                 print(translit(cl, language_code='ru', reversed=True))
-                with open(f'log/log_{now().__format__("DD.MM HH:mm")}.txt', encoding='u8',
-                          mode='a') as f:
+                with open(f'log/log_{now().__format__("DD.MM HH:mm")}.txt', encoding='u8', mode='a') as f:
                     f.write(f'{cl}\n')
+                    f.close()
         if e >= 20:
             try:
                 rmdir(str(d))
                 remove(f'{str(d)}.png')
             except:
                 pass
-            with open(f'log/log_{now().__format__("DD.MM HH:mm")}.txt', encoding='u8',
-                      mode='a') as f:
+            with open(f'log/log_{now().__format__("DD.MM HH:mm")}.txt', encoding='u8', mode='a') as f:
                 f.write('Лимит ошибок!')
                 c = False
             break
@@ -216,8 +218,11 @@ def download_all(date=get_schedule_date()):
     if c:
         with open(f'uploaded_photo/{d}.sf', 'wb') as f:
             dump(attachments, f)
+            f.close()
         with open(f'log/log_{now().__format__("DD.MM HH:mm")}.txt', encoding='u8', mode='r') as f:
-            send_console(f'Лог загрузки расписания на {str(d)}:\n\n{f.read()}')
+            log = f.read()
+            send_console(f'Лог загрузки расписания на {str(d)}:\n\n{log}')
+            f.close()
         if not cst.save_files:
             rmtree(f'{get_schedule_date()}', )
     else:

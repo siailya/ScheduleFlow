@@ -85,10 +85,9 @@ class Keyboards:
 
     def conslole_keyboard(self):
         keyboard = VkKeyboard(one_time=False)
-        keyboard.add_button('Пользователи', color=VkKeyboardColor.PRIMARY)
-        keyboard.add_button('Полная статистика', color=VkKeyboardColor.PRIMARY)
-        keyboard.add_line()
         keyboard.add_button('Статистика', color=VkKeyboardColor.PRIMARY)
+        keyboard.add_line()
+        keyboard.add_button('Полная статистика', color=VkKeyboardColor.PRIMARY)
         keyboard.add_button('Обновить', color=VkKeyboardColor.PRIMARY)
         self.vk_api.messages.send(peer_id=cst.console_id, random_id=get_random_id(),
                                   keyboard=keyboard.get_keyboard(),
