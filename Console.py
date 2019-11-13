@@ -11,7 +11,6 @@ from vk_api.utils import get_random_id
 
 from Base import *
 from Constantes import Constantes as cst
-from Keyboards import Keyboards
 from Process import download_all
 from Utilities import get_schedule_date, get_picture
 
@@ -29,7 +28,7 @@ class Console:
                 self.send_console('Очень интересно')
 
     def console(self, event):
-        Keyboards(self.vk_api).conslole_keyboard()
+        # Keyboards(self.vk_api).conslole_keyboard()
         msg = event.obj.text.lower().replace('@', '')
         if msg == '[club187161295|scheduleflow] обновить':
             self.send_console(f'Сейчас {now(tz="Europe/Moscow").__format__("DD.MM.YYYY HH:mm")}\nЗагрузка расписания')
@@ -92,6 +91,7 @@ class Console:
                 name, last, cls, requests = get_by_id(self.db, uid)[0]
                 del_by_id(self.db, uid)
                 self.send_console(f'Пользователь @id{uid}({name} {last}) ({cls}) удален!')
+                decrease_users(self.db)
             else:
                 self.send_console('Пользователь не найден в базе!')
         elif 'инфо' in msg:
@@ -128,6 +128,15 @@ class Console:
                         self.send_console(f'Ошибка на {i} классе!\nКто-то не получил расписание...')
                 else:
                     self.send_console(f'Нет юзеров из {i} класса!')
+        elif 'sql' in msg:
+            req = event.obj.text[4:]
+            cur = self.db.cursor()
+            res = cur.execute(
+                f"""
+                {req}
+                """
+            ).fetchall()
+            self.send_console(f'{res}')
 
     def send_console(self, message):
         self.vk_api.messages.send(peer_id=cst.console_id,

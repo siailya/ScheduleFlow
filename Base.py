@@ -151,6 +151,13 @@ def new_user(base, id, name, last):
         VALUES (?, ?, ?)
         """,
         (id, name, last)).fetchall()
+    res = cur.execute(
+        f"""
+        UPDATE stat
+        SET users = users + 1
+        WHERE date = '{now(tz="Europe/Moscow").__format__("YYYY-MM-DD")}'
+        """,
+        ).fetchall()
     base.commit()
 
 
@@ -239,7 +246,7 @@ def increase_users(base):
         f"""
         UPDATE stat
         SET users = users + 1
-        WHERE date = {now(tz="Europe/Moscow").__format__("YYYY-MM-DD")}
+        WHERE date = '{now(tz="Europe/Moscow").__format__("YYYY-MM-DD")}'
         """
     ).fetchall()
     base.commit()
@@ -249,9 +256,9 @@ def decrease_users(base):
     cur = base.cursor()
     res = cur.execute(
         f"""
-            UPDATE stat
-            SET users = users - 1
-            WHERE date = {now(tz="Europe/Moscow").__format__("YYYY-MM-DD")}
-            """
+        UPDATE stat
+        SET users = users - 1
+        WHERE date = '{now(tz="Europe/Moscow").__format__("YYYY-MM-DD")}'
+        """
     ).fetchall()
     base.commit()
