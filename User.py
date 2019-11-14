@@ -75,10 +75,12 @@ class User:
                 else:
                     Keyboards(self.vk_api).litera_keyboard(u_id, False)
             elif (msg in 'абвг') and (get_state(self.db, u_id) == 1):
+                name, last = self.user_get(u_id)
                 set_class_lit(self.db, u_id, msg.upper())
                 set_state(self.db, u_id, 2)
                 self.send_msg(u_id, f'Замечательно! Вы выбрали {get_cls(self.db, u_id).upper()} класс!\n'
                                     f'Этот выбор всегда можно сменить в настройках')
+                self.send_console(f'Пользователь @id{u_id}({name} {last}) выбрал {get_cls(self.db, u_id).upper()} класс')
                 Keyboards(self.vk_api).menu_keyboard(u_id)
             elif msg == 'без выбора класса':
                 set_state(self.db, u_id, 2)
