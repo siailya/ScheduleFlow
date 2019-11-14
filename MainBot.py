@@ -5,7 +5,7 @@ import vk_api.vk_api
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 from vk_api.utils import get_random_id
 
-from Base import add_new_day
+from Base import add_new_day, del_by_id
 from Inbox import *
 
 
@@ -24,6 +24,21 @@ class Bot:
             if event.type == VkBotEventType.MESSAGE_NEW:
                 add_new_day(self.db)
                 self.inbox(event)
+            elif event.type == VkBotEventType.MESSAGE_DENY:
+                name, last = self.user_get(event.obj.user_id)
+                del_by_id(self.db, event.obj.user_id)
+                self.send_console(f'🚫 Пользователь @id{event.obj.user_id}({name} {last}) запретил сообщения и был удален из базы')
+            elif event.type == VkBotEventType.GROUP_JOIN:
+                name, last = self.user_get(event.obj.user_id)
+                self.send_console(f'🔓 Новый подписчик: @id{event.obj.user_id}({name} {last})')
+            elif event.type == VkBotEventType.GROUP_LEAVE:
+                name, last = self.user_get(event.obj.user_id)
+                self.send_console(f'🔒 Произошло то, чего я не ожидал...\n'
+                                  f'В общем, подписчик пропал...\n'
+                                  f'@id{event.obj.user_id}({name} {last})')
+            elif event.type == VkBotEventType.WALL_REPLY_NEW:
+                name, last = self.user_get(event.obj.from_id)
+                self.send_console(f'Пользователь @id{event.obj.from_id}({name} {last}) оставил комментарий:\n{event.obj.text}')
 
     def inbox(self, event):
         Inbox(self.vk, event, self.db)
@@ -32,6 +47,15 @@ class Bot:
         self.vk_api.messages.send(peer_id=send_id,
                                   message=message,
                                   random_id=get_random_id())
+
+    def send_console(self, msg):
+        self.vk_api.messages.send(peer_id=cst.console_id,
+                                  message=msg,
+                                  random_id=get_random_id())
+
+    def user_get(self, uid):
+        info = self.vk_api.users.get(user_ids=uid)[0]
+        return info['first_name'], info['last_name']
 
 
 if __name__ == "__main__":

@@ -91,14 +91,15 @@ def smile(msg):
 
 def hello(msg):
     p = ['привет', 'сап', 'хай']
-    if msg.lower() in p or any(i in msg for i in p):
+    if msg in p or any(i in msg for i in p):
         return True
     return False
 
 
 def need_out(msg):
     commands = ['расписание', 'общее расписание', 'расписание звонков', 'настройки',
-                'сменить класс', 'назад', 'выключить уведомления', 'включить уведомления']
-    if msg in commands or 'расписание на' in msg or gratitude(msg):
+                'сменить класс', 'назад', 'выключить уведомления', 'включить уведомления',
+                'без выбора класса']
+    if (msg in commands) or ('расписание на' in msg) or (msg in '567891011абвг'):
         return False
     return True

@@ -101,7 +101,8 @@ class Console:
                     name, last, cls, uid, requests = get_by_name(self.db, name, last)[0]
                     self.send_console(f'Пользователь @id{uid}({name} {last}) ({cls})\n'
                                       f'id: {uid}\n'
-                                      f'Запросов: {requests}')
+                                      f'Запросов: {requests}\n'
+                                      f'Уведомления: {"включены" if get_notifications(self.db, uid) else "выключены"}')
                 except:
                     self.send_console('Пользователь не найден в базе!')
             else:
