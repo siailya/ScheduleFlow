@@ -1,4 +1,4 @@
-from os import path, listdir
+from os import path, listdir, remove
 from pickle import load
 from random import randint
 
@@ -217,6 +217,60 @@ class User:
                 elif msg == 'настройки':
                     set_state(self.db, u_id, 3)
                     Keyboards(self.vk_api).service_keyboard(u_id, get_notifications(self.db, u_id))
+                elif msg == 'тест':
+                    if get_cls(self.db, u_id) != 'Ns':
+                        Keyboards(self.vk_api).test_menu_keyboard(u_id)
+                    else:
+                        self.send_msg(u_id, f'К сожалению, тестовые возможности доступны только пользователям с выбранным классом')
+                elif msg == 'одна кнопка':
+                    if get_cls(self.db, u_id) != 'Ns':
+                        Keyboards(self.vk_api).menu_keyboard(u_id)
+                    else:
+                        Keyboards(self.vk_api).menu_keyboard(u_id, False)
+                elif msg == 'на завтра':
+                    date = pendulum.tomorrow(tz='Europe/Moscow').__format__('DD.MM.YYYY')
+                    if not path.exists(f'uploaded_photo/{date}.sf'):
+                        if path.exists(f'source/{date}.png'):
+                            remove(f'source/{date}.png')
+                        download_all(date)
+                        self.send_msg(u_id, 'Сейчас попробую найти или скачать расписание с сайта!\nЧуть-чуть терпения!')
+                        try:
+                            self.load_schedule(date)
+                            self.send_attachment(u_id,
+                                                 'Держи расписание на завтра!',
+                                                 self.schedules[get_cls(self.db, u_id)])
+                        except:
+                            self.send_msg(cst.error + '\nПо-прежнему доступна команда "Расписание", попробуйте её')
+                    else:
+                        try:
+                            self.load_schedule(date)
+                            self.send_attachment(u_id,
+                                                 'Держи расписание на завтра!',
+                                                 self.schedules[get_cls(self.db, u_id)])
+                        except:
+                            self.send_msg(cst.error + '\nПо-прежнему доступна команда "Расписание", попробуйте её')
+                elif msg == 'на сегодня':
+                    date = pendulum.today(tz='Europe/Moscow').__format__('DD.MM.YYYY')
+                    if not path.exists(f'uploaded_photo/{date}.sf'):
+                        if path.exists(f'source/{date}.png'):
+                            remove(f'source/{date}.png')
+                        self.send_msg(u_id, 'Сейчас попробую найти или скачать расписание с сайта!\nЧуть-чуть терпения!')
+                        download_all(date)
+                        try:
+                            self.load_schedule(date)
+                            self.send_attachment(u_id,
+                                                 'Держи расписание на завтра!',
+                                                 self.schedules[get_cls(self.db, u_id)])
+                        except:
+                            self.send_msg(cst.error + '\nПо-прежнему доступна команда "Расписание", попробуйте её')
+                    else:
+                        try:
+                            self.load_schedule(date)
+                            self.send_attachment(u_id,
+                                                 'Держи расписание на завтра!',
+                                                 self.schedules[get_cls(self.db, u_id)])
+                        except:
+                            self.send_msg(cst.error + '\nПо-прежнему доступна команда "Расписание", попробуйте её')
                 elif gratitude(msg):
                     increase_gratitude(self.db, u_id)
                     self.send_msg(u_id, cst.answers[randint(0, len(cst.answers) - 1)])
@@ -248,7 +302,10 @@ class User:
                     Keyboards(self.vk_api).class_keyboard(u_id)
                 elif msg == 'назад':
                     set_state(self.db, u_id, 2)
-                    Keyboards(self.vk_api).menu_keyboard(u_id)
+                    if get_cls(self.db, u_id) != 'Ns':
+                        Keyboards(self.vk_api).menu_keyboard(u_id)
+                    else:
+                        Keyboards(self.vk_api).menu_keyboard(u_id, False)
                 elif msg == 'выключить уведомления':
                     set_notifications(self.db, u_id, 0)
                     Keyboards(self.vk_api).service_keyboard(u_id, 0, 'Уведомления выключены!')
@@ -294,6 +351,6 @@ class User:
                                   random_id=get_random_id(),
                                   attachment=attachment)
 
-    def load_schedule(self):
-        with open(f'uploaded_photo/{get_schedule_date()}.sf', 'rb') as f:
+    def load_schedule(self, date=get_schedule_date()):
+        with open(f'uploaded_photo/{date}.sf', 'rb') as f:
             self.schedules = load(f)

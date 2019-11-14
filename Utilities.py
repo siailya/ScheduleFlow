@@ -100,6 +100,6 @@ def need_out(msg):
     commands = ['расписание', 'общее расписание', 'расписание звонков', 'настройки',
                 'сменить класс', 'назад', 'выключить уведомления', 'включить уведомления',
                 'без выбора класса']
-    if (msg in commands) or ('расписание на' in msg) or (gratitude(msg)) or (msg.upper() in cst.classes) or (msg in '567891011') or (msg in 'абвг'):
+    if (msg in commands) or ('расписание на' in msg) or (msg in '567891011абвг'):
         return False
     return True
