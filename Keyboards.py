@@ -105,4 +105,4 @@ class Keyboards:
         keyboard.add_button('Настройки', color=VkKeyboardColor.PRIMARY)
         self.vk_api.messages.send(peer_id=send_id, random_id=get_random_id(),
                                   keyboard=keyboard.get_keyboard(),
-                                  message='Тестовые возможности!')
+                                  message='Тестовые возможности открыты!')
