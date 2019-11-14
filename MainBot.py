@@ -21,8 +21,6 @@ class Bot:
 
     def main(self):
         for event in self.long_poll.listen():
-            print(event.type)
-            print(event)
             if event.type == VkBotEventType.MESSAGE_NEW:
                 add_new_day(self.db)
                 self.inbox(event)
