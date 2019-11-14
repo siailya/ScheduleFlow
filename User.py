@@ -89,7 +89,7 @@ class User:
                 Keyboards(self.vk_api).menu_keyboard(u_id, False)
             elif get_state(self.db, u_id) == 2:
                 name, last, cls, requests = get_by_id(self.db, u_id)[0]
-                if need_out(msg):
+                if need_out(msg) and u_id not in cst.admins:
                     self.send_console(f'Сообщение от: @id{u_id}({name} {last}) ({cls}):\n'
                                       f'{event.obj.text}')
                 if msg == 'расписание':
