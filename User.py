@@ -225,7 +225,7 @@ class User:
                                                  self.schedules[cls])
                         except:
                             self.send_msg(u_id, cst.error)
-                elif msg == 'расписание звонков':
+                elif msg == 'звонки':
                     ring_schedule(self.vk_api, u_id)
                 elif msg == 'настройки':
                     set_state(self.db, u_id, 3)
