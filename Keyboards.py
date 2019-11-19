@@ -18,11 +18,13 @@ class Keyboards:
     def menu_keyboard(self, send_id, c=True):
         keyboard = VkKeyboard(one_time=False)
         if c:
-            keyboard.add_button('Расписание', color=VkKeyboardColor.DEFAULT)
+            keyboard.add_button('На сегодня', color=VkKeyboardColor.DEFAULT)
+            keyboard.add_button('На завтра', color=VkKeyboardColor.DEFAULT)
             keyboard.add_line()
-        keyboard.add_button('Общее расписание', color=VkKeyboardColor.DEFAULT)
-        keyboard.add_button('Расписание звонков', color=VkKeyboardColor.DEFAULT)
+        keyboard.add_button('Общее на сегодня', color=VkKeyboardColor.DEFAULT)
+        keyboard.add_button('Общее на завтра', color=VkKeyboardColor.DEFAULT)
         keyboard.add_line()
+        keyboard.add_button('Звонки', color=VkKeyboardColor.DEFAULT)
         keyboard.add_button('Настройки', color=VkKeyboardColor.PRIMARY)
         self.vk_api.messages.send(peer_id=send_id, random_id=get_random_id(),
                                   keyboard=keyboard.get_keyboard(),

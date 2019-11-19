@@ -1,10 +1,12 @@
 from math import ceil
 from os import remove
-from pickle import load
+from pickle import load, dump
 from random import randint
-from shutil import rmtree
+from shutil import rmtree, copy
 
 import matplotlib.pyplot as plt
+import pendulum
+import vk_api
 from pendulum import today, date
 from vk_api import VkUpload
 from vk_api.utils import get_random_id
@@ -12,7 +14,7 @@ from vk_api.utils import get_random_id
 from Base import *
 from Constantes import Constantes as cst
 from Process import download_all
-from Utilities import get_schedule_date, get_picture
+from Utilities import get_schedule_date, get_picture, upload_class
 
 
 class Console:
@@ -31,7 +33,7 @@ class Console:
         # Keyboards(self.vk_api).conslole_keyboard()
         msg = event.obj.text.lower().replace('@', '')
         if msg == '[club187161295|scheduleflow] обновить':
-            self.send_console(f'Сейчас {now(tz="Europe/Moscow").__format__("DD.MM.YYYY HH:mm")}\nЗагрузка расписания')
+            self.send_console(f'Сейчас {now(tz="Europe/Moscow").__format__("DD.MM.YYYY HH:mm")}\nЗагрузка расписания на {get_schedule_date()}')
             try:
                 a = ''
                 remove(f'uploaded_photo/{get_schedule_date()}.sf')
@@ -47,6 +49,40 @@ class Console:
             download_all()
             self.load_schedule()
             self.send_console(f'Расписание на {get_schedule_date()} обновлено!')
+        elif msg == 'обновить на сегодня':
+            date = pendulum.today(tz="Europe/Moscow").__format__("DD.MM.YYYY HH:mm")
+            try:
+                a = ''
+                remove(f'uploaded_photo/{date}.sf')
+                a += 'Старое расписание удалено!\n'
+                rmtree(f'{date}')
+                a += 'Каталог со старым расписанием удален!\n'
+                remove(f'source/{date}.png')
+                a += 'Старый исходник удален!'
+                self.send_console(a)
+            except:
+                self.send_console(f'Ошибка какая-то...\n{a}')
+            get_picture(date)
+            download_all(date)
+            self.load_schedule_date(date)
+            self.send_console(f'Расписание на {date} обновлено!')
+        elif msg == 'обновить на завтра':
+            date = pendulum.tomorrow(tz="Europe/Moscow").__format__("DD.MM.YYYY HH:mm")
+            try:
+                a = ''
+                remove(f'uploaded_photo/{date}.sf')
+                a += 'Старое расписание удалено!\n'
+                rmtree(f'{date}')
+                a += 'Каталог со старым расписанием удален!\n'
+                remove(f'source/{date}.png')
+                a += 'Старый исходник удален!'
+                self.send_console(a)
+            except:
+                self.send_console(f'Ошибка какая-то...\n{a}')
+            get_picture(date)
+            download_all(date)
+            self.load_schedule_date(date)
+            self.send_console(f'Расписание на {date} обновлено!')
         elif msg == '[club187161295|scheduleflow] статистика':
             self.get_stat()
         elif msg == '[club187161295|scheduleflow] полная статистика':
@@ -138,6 +174,18 @@ class Console:
                 """
             ).fetchall()
             self.send_console(f'{res}')
+        elif 'ошибка_расписания' in msg:
+            date = msg.lstrip('ошибка_расписания ')
+            s = {}
+            upload = vk_api.VkUpload(self.vk)
+            for i in cst.classes:
+                copy('labels/error.png', f'{date}/{i}.png')
+                s.update({i: upload_class(i, upload, date)})
+
+            with open(f'uploaded_photo/{date}.sf', 'wb') as f:
+                dump(s, f)
+
+            self.send_console(f'Все классы на {date} заменены ошибкой!')
 
     def send_console(self, message):
         self.vk_api.messages.send(peer_id=cst.console_id,
@@ -146,6 +194,10 @@ class Console:
 
     def load_schedule(self):
         with open(f'uploaded_photo/{get_schedule_date()}.sf', 'rb') as f:
+            self.schedules = load(f)
+
+    def load_schedule_date(self, s_date):
+        with open(f'uploaded_photo/{s_date}.sf', 'rb') as f:
             self.schedules = load(f)
 
     def send_attachment(self, send_id, msg, attachment):

@@ -5,7 +5,7 @@ class Constantes:
                '11Г']
     console_id = 2000000002
     admins = [223632391, 222383631, 66061219]
-    token = ''
+    token = 'ce79e46a69e9a57e2ad1825ea933f7ee9402b1d058e92a3a0905d965e9d4fad57572f7f18151ae796f105'
     group_id = '187161295'
     ver = '1.5.2'
     save_files = 1

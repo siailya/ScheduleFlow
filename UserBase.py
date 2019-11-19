@@ -60,4 +60,13 @@ def stat():
         print(u)
 
 
-to_base()
+def testers():
+    db = sqlite3.connect('data/base.db')
+    cur = db.cursor()
+    result = cur.execute(
+        f"""
+        SELECT id FROM users WHERE tester = 1
+        """).fetchall()
+    print([i[0] for i in result])
+
+testers()

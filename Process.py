@@ -61,6 +61,7 @@ class ScheduleFlow:
             remove(self.name)
 
     def brute_force(self, template_name):
+        time = now().__format__("DD.MM HH:mm")
         cond = False
         threshold = 0.7
         e = 0
@@ -82,7 +83,7 @@ class ScheduleFlow:
                     e += 1
                     threshold -= 0.1
         print(f'y = {y}; e = {e}; th = {threshold};', end=' ')
-        with open(f'log/log_{now().__format__("DD.MM HH:mm")}.txt', encoding='u8', mode='a') as f:
+        with open(f'log/log_{time}.txt', encoding='u8', mode='a') as f:
             f.write(f'y = {y}; e = {e}; th = {threshold} ')
         return x, y
 
@@ -148,16 +149,17 @@ class ScheduleFlow:
         y1 = int(y0 + crop_y)
         tmp = self.img.crop((x0, y0, x1, y1))
         tmp.save(self.name)
-        # tmp.save(f'tmp/{class_name}.png')
+        tmp.save(f'tmp/{class_name}.png')
 
 
 def download_all(date=get_schedule_date()):
     vk = vk_api.VkApi(token=cst.token)
     upload = VkUpload(vk)
     attachments = {}
+    time = now(tz="Europe/Moscow").__format__("DD.MM HH:mm")
     if not path.exists('log'):
         mkdir('log')
-    with open(f'log/log_{now(tz="Europe/Moscow").__format__("DD.MM HH:mm")}.txt', encoding='u8', mode='w') as f:
+    with open(f'log/log_{time}.txt', encoding='u8', mode='w') as f:
         f.write(f'{pendulum.now(tz="Europe/Moscow").__format__("HH:mm DD.MM.YYYY")}\n'
                 f'Загрузка на {get_schedule_date()}\n')
         f.close()
@@ -181,11 +183,11 @@ def download_all(date=get_schedule_date()):
                 except BaseException as k:
                     e += 1
                     print(translit(f'\nОшибка {k} ', language_code='ru', reversed=True))
-                    with open(f'log/log_{now().__format__("DD.MM HH:mm")}.txt', encoding='u8', mode='a') as f:
+                    with open(f'log/log_{time}.txt', encoding='u8', mode='a') as f:
                         f.write(f'\nОшибка {k} ')
                         f.close()
                 print(translit(cl, language_code='ru', reversed=True))
-                with open(f'log/log_{now().__format__("DD.MM HH:mm")}.txt', encoding='u8', mode='a') as f:
+                with open(f'log/log_{time}.txt', encoding='u8', mode='a') as f:
                     f.write(f'{cl}\n')
                     f.close()
         else:
@@ -197,11 +199,11 @@ def download_all(date=get_schedule_date()):
                 except BaseException as k:
                     e += 1
                     print(translit(f'\nОшибка {k} ', language_code='ru', reversed=True))
-                    with open(f'log/log_{now().__format__("DD.MM HH:mm")}.txt', encoding='u8', mode='a') as f:
+                    with open(f'log/log_{time}.txt', encoding='u8', mode='a') as f:
                         f.write(f'\nОшибка {k} ')
                         f.close()
                 print(translit(cl, language_code='ru', reversed=True))
-                with open(f'log/log_{now().__format__("DD.MM HH:mm")}.txt', encoding='u8', mode='a') as f:
+                with open(f'log/log_{time}.txt', encoding='u8', mode='a') as f:
                     f.write(f'{cl}\n')
                     f.close()
         if e >= 20:
@@ -210,7 +212,7 @@ def download_all(date=get_schedule_date()):
                 remove(f'{str(d)}.png')
             except:
                 pass
-            with open(f'log/log_{now().__format__("DD.MM HH:mm")}.txt', encoding='u8', mode='a') as f:
+            with open(f'log/log_{time}.txt', encoding='u8', mode='a') as f:
                 f.write('Лимит ошибок!')
                 c = False
             break
@@ -219,7 +221,7 @@ def download_all(date=get_schedule_date()):
         with open(f'uploaded_photo/{d}.sf', 'wb') as f:
             dump(attachments, f)
             f.close()
-        with open(f'log/log_{now().__format__("DD.MM HH:mm")}.txt', encoding='u8', mode='r') as f:
+        with open(f'log/log_{time}.txt', encoding='u8', mode='r') as f:
             log = f.read()
             send_console(f'Лог загрузки расписания на {str(d)}:\n\n{log}')
             f.close()
