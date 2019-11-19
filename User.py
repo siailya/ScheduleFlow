@@ -231,6 +231,7 @@ class User:
                     set_state(self.db, u_id, 3)
                     Keyboards(self.vk_api).service_keyboard(u_id, get_notifications(self.db, u_id))
                 elif msg == 'на завтра':
+                    increase_requests()
                     if pendulum.today(tz='Europe/Moscow').weekday() == 5:
                         date = saturday()
                     else:
@@ -267,6 +268,7 @@ class User:
                         except:
                             self.send_msg(cst.error + 'Произошла ошибка!\nПо-прежнему доступна команда "Расписание", попробуйте её')
                 elif msg == 'на сегодня':
+                    increase_requests()
                     if pendulum.today(tz='Europe/Moscow').weekday() == 6:
                         self.send_msg(u_id, 'Сегодня воскресенье!\nПопробуй запросить расписание на завтра ;-)')
                     else:
@@ -292,6 +294,7 @@ class User:
                             except:
                                 self.send_msg(cst.error + 'Произошла ошибка!\nПо-прежнему доступна команда "Расписание", попробуйте её')
                 elif msg == 'общее на сегодня':
+                    increase_requests()
                     if pendulum.today(tz='Europe/Moscow').weekday() == 6:
                         self.send_msg(u_id, 'Сегодня воскресенье!\nПопробуй запросить расписание на завтра ;-)')
                     else:
@@ -309,6 +312,7 @@ class User:
                             except:
                                 self.send_msg(u_id, cst.error)
                 elif msg == 'общее на завтра':
+                    increase_requests()
                     if pendulum.today(tz='Europe/Moscow').weekday() == 5:
                         date = saturday()
                     else:
