@@ -100,8 +100,12 @@ def need_out(msg):
     commands = ['расписание', 'общее расписание', 'расписание звонков', 'настройки',
                 'сменить класс', 'назад', 'выключить уведомления', 'включить уведомления',
                 'без выбора класса', 'на завтра', 'на сегодня', 'общее на завтра',
-                'общее на сегодня']  # 'тест' 'одна кнопка', 'на завтра', 'на сегодня'
-    if (msg in commands) or ('расписание на' in msg) or (msg in '567891011абвг'):
+                'общее на сегодня', 'звонки']
+    if (msg in commands) or ('расписание на' in msg) or (msg in '567891011абвг') or (gratitude(msg)) or (msg in cst.smiles):
         return False
     return True
 
+
+def create_sf(date_sf):
+    f = open(f'uploaded_photo/{date_sf}.sf', 'wb')
+    f.close()

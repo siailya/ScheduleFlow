@@ -59,40 +59,42 @@ class Bot:
 
 
 if __name__ == "__main__":
-    # Bot().main()
-    console_id = cst.console_id
-    print(f'{cst.ver}')
-    if not path.exists('log'):
-        mkdir('log')
-    if not path.exists('uploaded_photo'):
-        mkdir('uploaded_photo')
-    if not path.exists('data'):
-        mkdir('data')
-        pt = 'data/base.pickle'
-        fi = open(pt, 'wb')
-        fi.close()
-
-        pt = 'data/stat.pickle'
-        fi = open(pt, 'wb')
-        fi.close()
-    if not path.exists(f'uploaded_photo/{get_schedule_date()}.sf'):
-        print('Loading schedules for current date')
-        download_all()
-        print('Loaded!')
+    if cst.debug:
+        Bot().main()
     else:
-        print()
-    print('====== Work started ======')
-    try:
-        Bot().send_msg(console_id, f'Запущен! Версия {cst.ver}')
-    except:
-        sleep(60)
-    e = 0
-    while e <= 300:
+        console_id = cst.console_id
+        print(f'{cst.ver}')
+        if not path.exists('log'):
+            mkdir('log')
+        if not path.exists('uploaded_photo'):
+            mkdir('uploaded_photo')
+        if not path.exists('data'):
+            mkdir('data')
+            pt = 'data/base.pickle'
+            fi = open(pt, 'wb')
+            fi.close()
+
+            pt = 'data/stat.pickle'
+            fi = open(pt, 'wb')
+            fi.close()
+        if not path.exists(f'uploaded_photo/{get_schedule_date()}.sf'):
+            print('Loading schedules for current date')
+            download_all()
+            print('Loaded!')
+        else:
+            print()
+        print('====== Work started ======')
         try:
-            Bot().main()
-        except BaseException as ex:
-            e += 1
+            Bot().send_msg(console_id, f'Запущен! Версия {cst.ver}')
+        except:
+            sleep(60)
+        e = 0
+        while e <= 300:
             try:
-                Bot().send_msg(console_id, f'🆘 Exception: {ex} <count: {e} >')
-            except:
-                sleep(60)
+                Bot().main()
+            except BaseException as ex:
+                e += 1
+                try:
+                    Bot().send_msg(console_id, f'🆘 Exception: {ex} <count: {e} >')
+                except:
+                    sleep(60)

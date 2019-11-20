@@ -7,14 +7,59 @@ from shutil import rmtree, copy
 import matplotlib.pyplot as plt
 import pendulum
 import vk_api
-from pendulum import today, date
+from pendulum import today, date, tomorrow
 from vk_api import VkUpload
 from vk_api.utils import get_random_id
 
 from Base import *
 from Constantes import Constantes as cst
 from Process import download_all
-from Utilities import get_schedule_date, get_picture, upload_class
+from Utilities import get_picture, upload_class, create_sf
+
+
+def saturday():
+    if pendulum.tomorrow(tz='Europe/Moscow').day == 31:
+        return pendulum.date(pendulum.tomorrow().year, pendulum.tomorrow().month + 1, 1).__format__('DD.MM.YYYY')
+    elif pendulum.tomorrow(tz='Europe/Moscow').day == 30:
+        if pendulum.tomorrow().month in [2, 4, 6, 9, 11]:
+            return pendulum.date(pendulum.tomorrow().year, pendulum.tomorrow().month + 1, 1).__format__('DD.MM.YYYY')
+        else:
+            return pendulum.date(pendulum.tomorrow().year, pendulum.tomorrow().month, 31).__format__('DD.MM.YYYY')
+    else:
+        return pendulum.date(pendulum.tomorrow().year, pendulum.tomorrow().month,
+                             pendulum.tomorrow().day + 1).__format__('DD.MM.YYYY')
+
+
+def get_schedule_date():
+    hr = now(tz='Europe/Moscow').time().hour
+    mt = now(tz='Europe/Moscow').time().minute
+    yr = tomorrow(tz='Europe/Moscow').year
+    mtt = tomorrow(tz='Europe/Moscow').month
+    td = now(tz='Europe/Moscow').weekday()
+    if td == 6:
+        return tomorrow(tz='Europe/Moscow').date().__format__('DD.MM.YYYY')
+    elif td in [0, 1, 2, 3, 4]:
+        if (hr >= 13) and ((hr <= 23) and (mt <= 59)):
+            return tomorrow(tz='Europe/Moscow').date().__format__('DD.MM.YYYY')
+        else:
+            return today(tz='Europe/Moscow').date().__format__('DD.MM.YYYY')
+    else:
+        if (hr >= 13) and ((hr <= 23) and (mt <= 59)):
+            if tomorrow(tz='Europe/Moscow').day + 1 in [30, 31]:
+                if mtt in [1, 3, 5, 7, 8, 10, 12]:
+                    if tomorrow(tz='Europe/Moscow').day + 1 == 31:
+                        return date(yr, mtt + 1, 1).__format__('DD.MM.YYYY')
+                    else:
+                        return date(yr, mtt, 31).__format__('DD.MM.YYYY')
+                else:
+                    if tomorrow(tz='Europe/Moscow').day + 1 == 30:
+                        return date(yr, mtt + 1, 1).__format__('DD.MM.YYYY')
+                    else:
+                        return date(yr, mtt, 30).__format__('DD.MM.YYYY')
+            else:
+                return date(yr, mtt, tomorrow().day + 1).__format__('DD.MM.YYYY')
+        else:
+            return today(tz='Europe/Moscow').date().__format__('DD.MM.YYYY')
 
 
 class Console:
@@ -38,6 +83,8 @@ class Console:
                 a = ''
                 remove(f'uploaded_photo/{get_schedule_date()}.sf')
                 a += 'Старое расписание удалено!\n'
+                create_sf(get_schedule_date())
+                a += 'Файл расписания создан!\n'
                 rmtree(f'{get_schedule_date()}')
                 a += 'Каталог со старым расписанием удален!\n'
                 remove(f'source/{get_schedule_date()}.png')
@@ -46,6 +93,7 @@ class Console:
             except:
                 self.send_console(f'Ошибка какая-то...\n{a}')
             get_picture()
+            create_sf(get_schedule_date())
             download_all()
             self.load_schedule()
             self.send_console(f'Расписание на {get_schedule_date()} обновлено!')
@@ -55,6 +103,8 @@ class Console:
                 a = ''
                 remove(f'uploaded_photo/{date}.sf')
                 a += 'Старое расписание удалено!\n'
+                create_sf(date)
+                a += 'Файл расписания создан!\n'
                 rmtree(f'{date}')
                 a += 'Каталог со старым расписанием удален!\n'
                 remove(f'source/{date}.png')
@@ -63,6 +113,7 @@ class Console:
             except:
                 self.send_console(f'Ошибка какая-то...\n{a}')
             get_picture(date)
+            create_sf(date)
             download_all(date)
             self.load_schedule_date(date)
             self.send_console(f'Расписание на {date} обновлено!')
@@ -72,6 +123,8 @@ class Console:
                 a = ''
                 remove(f'uploaded_photo/{date}.sf')
                 a += 'Старое расписание удалено!\n'
+                create_sf(date)
+                a += 'Файл расписания создан!\n'
                 rmtree(f'{date}')
                 a += 'Каталог со старым расписанием удален!\n'
                 remove(f'source/{date}.png')
@@ -80,6 +133,7 @@ class Console:
             except:
                 self.send_console(f'Ошибка какая-то...\n{a}')
             get_picture(date)
+            create_sf(date)
             download_all(date)
             self.load_schedule_date(date)
             self.send_console(f'Расписание на {date} обновлено!')
@@ -151,7 +205,12 @@ class Console:
                 else:
                     self.send_console('Пользователь не найден в базе!')
         elif 'рассылка расписания' in msg:
-            self.load_schedule()
+            if pendulum.today(tz='Europe/Moscow').weekday() == 5:
+                sf_date = saturday()
+            else:
+                sf_date = pendulum.tomorrow(tz='Europe/Moscow').__format__('DD.MM.YYYY')
+
+            self.load_schedule_date(sf_date)
             text = ''
             if msg != 'рассылка расписания':
                 text = event.obj.text[20:]

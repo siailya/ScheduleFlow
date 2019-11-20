@@ -13,7 +13,7 @@ from transliterate import translit
 from vk_api import VkUpload
 
 from Constantes import Constantes as cst
-from Utilities import get_schedule_date, get_picture, send_console, upload_class
+from Utilities import get_schedule_date, get_picture, send_console, upload_class, create_sf
 
 
 class ScheduleFlow:
@@ -218,6 +218,7 @@ def download_all(date=get_schedule_date()):
             break
 
     if c:
+        create_sf(d)
         with open(f'uploaded_photo/{d}.sf', 'wb') as f:
             dump(attachments, f)
             f.close()
