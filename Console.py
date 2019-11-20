@@ -79,19 +79,29 @@ class Console:
         msg = event.obj.text.lower().replace('@', '')
         if msg == '[club187161295|scheduleflow] обновить':
             self.send_console(f'Сейчас {now(tz="Europe/Moscow").__format__("DD.MM.YYYY HH:mm")}\nЗагрузка расписания на {get_schedule_date()}')
+            date = get_schedule_date()
+            a = ''
             try:
-                a = ''
-                remove(f'uploaded_photo/{get_schedule_date()}.sf')
+                remove(f'uploaded_photo/{date}.sf')
                 a += 'Старое расписание удалено!\n'
-                create_sf(get_schedule_date())
+                create_sf(date)
                 a += 'Файл расписания создан!\n'
-                rmtree(f'{get_schedule_date()}')
-                a += 'Каталог со старым расписанием удален!\n'
-                remove(f'source/{get_schedule_date()}.png')
-                a += 'Старый исходник удален!'
-                self.send_console(a)
             except:
-                self.send_console(f'Ошибка какая-то...\n{a}')
+                a += 'Ошибка удаления старого расписания!\n'
+
+            try:
+                rmtree(f'{date}')
+                a += 'Каталог со старым расписанием удален!\n'
+            except:
+                a += 'Ошибка удаления старого каталога\n'
+
+            try:
+                remove(f'source/{date}.png')
+                a += 'Старый исходник удален!'
+            except:
+                a += 'Ошибка удаления старого исходника!'
+
+            self.send_console(a)
             get_picture()
             create_sf(get_schedule_date())
             download_all()
@@ -99,19 +109,28 @@ class Console:
             self.send_console(f'Расписание на {get_schedule_date()} обновлено!')
         elif msg == 'обновить на сегодня':
             date = pendulum.today(tz="Europe/Moscow").__format__("DD.MM.YYYY HH:mm")
+            a = ''
             try:
-                a = ''
                 remove(f'uploaded_photo/{date}.sf')
                 a += 'Старое расписание удалено!\n'
                 create_sf(date)
                 a += 'Файл расписания создан!\n'
+            except:
+                a += 'Ошибка удаления старого расписания!\n'
+
+            try:
                 rmtree(f'{date}')
                 a += 'Каталог со старым расписанием удален!\n'
+            except:
+                a += 'Ошибка удаления старого каталога\n'
+
+            try:
                 remove(f'source/{date}.png')
                 a += 'Старый исходник удален!'
-                self.send_console(a)
             except:
-                self.send_console(f'Ошибка какая-то...\n{a}')
+                a += 'Ошибка удаления старого исходника!'
+
+            self.send_console(a)
             get_picture(date)
             create_sf(date)
             download_all(date)
@@ -119,19 +138,28 @@ class Console:
             self.send_console(f'Расписание на {date} обновлено!')
         elif msg == 'обновить на завтра':
             date = pendulum.tomorrow(tz="Europe/Moscow").__format__("DD.MM.YYYY HH:mm")
+            a = ''
             try:
-                a = ''
                 remove(f'uploaded_photo/{date}.sf')
                 a += 'Старое расписание удалено!\n'
                 create_sf(date)
                 a += 'Файл расписания создан!\n'
+            except:
+                a += 'Ошибка удаления старого расписания!\n'
+
+            try:
                 rmtree(f'{date}')
                 a += 'Каталог со старым расписанием удален!\n'
+            except:
+                a += 'Ошибка удаления старого каталога\n'
+
+            try:
                 remove(f'source/{date}.png')
                 a += 'Старый исходник удален!'
-                self.send_console(a)
             except:
-                self.send_console(f'Ошибка какая-то...\n{a}')
+                a += 'Ошибка удаления старого исходника!'
+
+            self.send_console(a)
             get_picture(date)
             create_sf(date)
             download_all(date)
