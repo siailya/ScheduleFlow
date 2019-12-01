@@ -60,7 +60,7 @@ def get_by_name(base, name, last):
     cur = base.cursor()
     res = cur.execute(
         f"""
-            SELECT name, last, cls, id, requests FROM users
+            SELECT name, last, cls, id, requests, gratitudes FROM users
             WHERE name = '{name}' AND last = '{last}'
             """
     ).fetchall()

@@ -12,7 +12,7 @@ from Constantes import Constantes as cst
 from Keyboards import Keyboards
 from Process import download_all
 from Rings import ring_schedule
-from Utilities import gratitude, smile, get_picture, hello, need_out, create_sf
+from Utilities import gratitude, smile, get_picture, hello, need_out, upload_pic
 
 
 def saturday():
@@ -70,6 +70,7 @@ class User:
         else:
             self.no_text(event)
         self.schedules = {}
+        self.load_schedule(get_schedule_date())
 
     def no_text(self, event):
         u_id = event.obj.peer_id
@@ -139,55 +140,15 @@ class User:
                 if need_out(msg) and u_id not in cst.admins:
                     self.send_console(f'Сообщение от: @id{u_id}({name} {last}) ({cls}):\n'
                                       f'{event.obj.text}')
-                if msg == 'расписание':
-                    increase_requests(self.db, u_id)
-                    if path.exists(f'uploaded_photo/{get_schedule_date()}.sf'):
-                        self.load_schedule()
-                        self.send_attachment(u_id,
-                                             f'Держи расписание {cls} класса на {get_schedule_date()} '
-                                             f'{cst.smiles_answer[randint(0, 13)]}',
-                                             self.schedules[cls])
-                    else:
-                        self.send_msg(u_id, f'Сейчас постараюсь найти расписание на '
-                                            f'{get_schedule_date()}\nПридется чуть-чуть '
-                                            f'подождать...\nЕсли '
-                                            f'прошло больше 20 '
-                                            f'секунд '
-                                            f'- скорее всего, все идет по плану! '
-                                            f'{cst.smiles_answer[randint(0, 13)]}')
-                        create_sf(get_schedule_date())
-                        download_all()
-                        self.load_schedule()
-                        try:
-                            self.send_attachment(u_id,
-                                                 f'Держи расписание {cls} класса на '
-                                                 f'{get_schedule_date()} '
-                                                 f'{cst.smiles_answer[randint(0, 13)]}',
-                                                 self.schedules[cls])
-                        except:
-                            self.send_msg(u_id, cst.error)
-                elif msg == 'общее расписание':
-                    if path.exists(f'source/{get_schedule_date()}.png'):
-                        self.send_photo(u_id, f'source/{get_schedule_date()}.png',
-                                        f'Держи общее расписание на {get_schedule_date()} '
-                                        f'{cst.smiles_answer[randint(0, 13)]}')
-                    else:
-                        try:
-                            get_picture()
-                            self.send_photo(u_id, f'source/{get_schedule_date()}.png',
-                                            f'Держи общее расписание на {get_schedule_date()} '
-                                            f'{cst.smiles_answer[randint(0, 13)]}')
-                        except:
-                            self.send_msg(u_id, cst.error)
                 elif 'расписание на' in msg:
                     increase_requests(self.db, u_id)
                     try:
                         d, m = list(map(int, msg.lstrip('расписание на').split('.')))
-                        date = pendulum.date(pendulum.now().year, m, d).__format__('DD.MM.YYYY')
-                        if path.exists(f'source/{date}.png'):
-                            self.send_photo(u_id,
-                                            f'source/{date}.png',
-                                            f'Держи расписание на {date} {cst.smiles_answer[randint(0, 13)]}')
+                        all_date = pendulum.date(pendulum.now().year, m, d).__format__('DD.MM.YYYY')
+                        self.load_schedule(all_date)
+                        if path.exists(f'uploaded_photo/{all_date}.png'):
+                            self.send_attachment(u_id, f'Держи общее расписание на {all_date} {cst.smiles_answer[randint(0, 13)]}',
+                                                 self.schedules['main'])
                         else:
                             dates = 'Используйте команду в виде "Расписание на 20.10"\n\nСписок ' \
                                     'дат, на которые доступны расписания: \n' + \
@@ -198,20 +159,19 @@ class User:
                 elif ',' in msg and '.' in msg:
                     increase_requests(self.db, u_id)
                     try:
-                        cls, date = msg.split(',')
+                        cls, schedule_date = msg.split(',')
                         if cls.upper() in cst.classes:
-                            d, m = list(map(int, date.split('.')))
-                            date = pendulum.date(pendulum.now().year, m, d).__format__('DD.MM.YYYY')
-                            if not path.exists(f'uploaded_photo/{date}.sf'):
+                            d, m = list(map(int, schedule_date.split('.')))
+                            schedule_date = pendulum.date(pendulum.now().year, m, d).__format__('DD.MM.YYYY')
+                            if not path.exists(f'uploaded_photo/{schedule_date}.sf'):
                                 self.send_msg(u_id,
                                               'Сейчас попробую найти или скачать расписание с сайта!\nЧуть-чуть терпения!')
-                                create_sf(date)
-                                download_all(date)
+                                download_all(schedule_date)
                                 try:
-                                    with open(f'uploaded_photo/{date}.sf', 'rb') as f:
+                                    with open(f'uploaded_photo/{schedule_date}.sf', 'rb') as f:
                                         self.schedules = load(f)
                                     self.send_attachment(u_id, f'Держи расписание {cls.upper()} класса на '
-                                                               f'{date} {cst.smiles_answer[randint(0, 13)]}',
+                                                               f'{schedule_date} {cst.smiles_answer[randint(0, 13)]}',
                                                          self.schedules[cls.upper()])
                                 except:
                                     dates = 'Список дат, на которые доступны расписания: \n' + \
@@ -219,153 +179,150 @@ class User:
                                     self.send_msg(u_id, f'Ошибка! Расписание на указанную дату не найдено!\n\n{dates}')
                             else:
                                 try:
-                                    with open(f'uploaded_photo/{date}.sf', 'rb') as f:
+                                    with open(f'uploaded_photo/{schedule_date}.sf', 'rb') as f:
                                         self.schedules = load(f)
                                     self.send_attachment(u_id, f'Держи расписание {cls.upper()} класса на '
-                                                               f'{date} {cst.smiles_answer[randint(0, 13)]}',
+                                                               f'{schedule_date} {cst.smiles_answer[randint(0, 13)]}',
                                                          self.schedules[cls.upper()])
                                 except:
-                                    remove(f'uploaded_photo/{date}.sf')
+                                    remove(f'uploaded_photo/{schedule_date}.sf')
                                     dates = 'Список дат, на которые доступны расписания: \n' + \
                                             ' | '.join([s[:-9] for s in listdir('source')])
                                     self.send_msg(u_id, f'Ошибка! Расписание на указанную дату не найдено!\n\n{dates}')
                         else:
                             self.send_msg(u_id, f'Вряд ли у нас есть расписание {cls} класса...')
                     except FileNotFoundError:
-                        cls, date = msg.split(',')
+                        cls, err_date = msg.split(',')
                         dates = 'Список дат, на которые доступны расписания: \n' + \
                                 ' | '.join([s[:-9] for s in listdir('source')])
-                        self.send_msg(u_id, f'К сожалению, у нас нет расписания на {date}\n\n'
+                        self.send_msg(u_id, f'К сожалению, у нас нет расписания на {err_date}\n\n'
                                             f'{dates}')
                     except KeyError:
-                        cls, date = msg.split(',')
+                        cls, err_date = msg.split(',')
                         dates = 'Список дат, на которые доступны расписания: \n' + \
                                 ' | '.join([s[:-9] for s in listdir('source')])
                         self.send_msg(u_id, f'К сожалению, у нас нет расписания {cls} класса на '
-                                            f'{date}\n\n{dates}')
+                                            f'{err_date}\n\n{dates}')
                     except ValueError:
                         dates = 'Список дат, на которые доступны расписания: \n' + \
                                 ' | '.join([s[:-9] for s in listdir('source')])
                         self.send_msg(u_id, f'Ошибка! Скорее всего, вы некорректно указали '
                                             f'дату\n\n{dates}')
-
-                elif msg.replace(' ', '').replace('"', '').upper() in cst.classes:
-                    self.send_msg(u_id, f'Из-за изменения принципа работы данная команда больше недоступна. '
-                                        f'Пожалуйста, используте команду "класс, дата", указывая число и месяц через запятую\n'
-                                        f'Например: {get_cls(self.db, u_id)}, {pendulum.tomorrow(tz="Europe/Moscow").__format__("DD.MM")}')
-                elif msg == 'звонки':
-                    ring_schedule(self.vk_api, u_id)
-                elif msg == 'настройки':
-                    set_state(self.db, u_id, 3)
-                    Keyboards(self.vk_api).service_keyboard(u_id, get_notifications(self.db, u_id))
                 elif msg == 'на завтра':
                     increase_requests(self.db, u_id)
                     if pendulum.today(tz='Europe/Moscow').weekday() == 5:
-                        date = saturday()
+                        schedule_date = saturday()
                     else:
-                        date = pendulum.tomorrow(tz='Europe/Moscow').__format__('DD.MM.YYYY')
+                        schedule_date = pendulum.tomorrow(tz='Europe/Moscow').__format__('DD.MM.YYYY')
 
-                    if not path.exists(f'uploaded_photo/{date}.sf'):
-                        if path.exists(f'source/{date}.png'):
-                            remove(f'source/{date}.png')
+                    if not path.exists(f'uploaded_photo/{schedule_date}.sf'):
+                        if path.exists(f'source/{schedule_date}.png'):
+                            remove(f'source/{schedule_date}.png')
                         self.send_msg(u_id,
                                       'Сейчас попробую найти или скачать расписание с сайта!\nЧуть-чуть терпения!')
-                        create_sf(date)
-                        download_all(date)
+                        download_all(schedule_date)
                         try:
-                            self.load_schedule(date)
+                            self.load_schedule(schedule_date)
                             if pendulum.today(tz='Europe/Moscow').weekday() != 5:
                                 self.send_attachment(u_id,
-                                                     'Держи расписание на завтра!',
+                                                     f'Держи расписание на завтра! {cst.smiles_answer[randint(0, 13)]}',
                                                      self.schedules[get_cls(self.db, u_id)])
                             else:
                                 self.send_attachment(u_id,
-                                                     'Держи расписание на понедельник!!',
+                                                     f'Держи расписание на понедельник! {cst.smiles_answer[randint(0, 13)]}',
                                                      self.schedules[get_cls(self.db, u_id)])
                         except:
                             self.send_msg(
                                 cst.error + 'Произошла ошибка!\nПо-прежнему доступна команда "Расписание", попробуйте её')
                     else:
                         try:
-                            self.load_schedule(date)
+                            self.load_schedule(schedule_date)
                             if pendulum.today(tz='Europe/Moscow').weekday() != 5:
                                 self.send_attachment(u_id,
-                                                     'Держи расписание на завтра!',
+                                                     f'Держи расписание на завтра! {cst.smiles_answer[randint(0, 13)]}',
                                                      self.schedules[get_cls(self.db, u_id)])
                             else:
                                 self.send_attachment(u_id,
-                                                     'Держи расписание на понедельник!!',
+                                                     f'Держи расписание на понедельник! {cst.smiles_answer[randint(0, 13)]}',
                                                      self.schedules[get_cls(self.db, u_id)])
                         except:
-                            self.send_msg(
-                                cst.error + 'Произошла ошибка!\nПо-прежнему доступна команда "Расписание", попробуйте её')
+                            self.send_msg(u_id,
+                                          cst.error + '\nПо-прежнему доступна команда "Расписание", попробуйте её')
                 elif msg == 'на сегодня':
                     increase_requests(self.db, u_id)
                     if pendulum.today(tz='Europe/Moscow').weekday() == 6:
                         self.send_msg(u_id, 'Сегодня воскресенье!\nПопробуй запросить расписание на завтра ;-)')
                     else:
-                        date = pendulum.today(tz='Europe/Moscow').__format__('DD.MM.YYYY')
-                        if not path.exists(f'uploaded_photo/{date}.sf'):
-                            if path.exists(f'source/{date}.png'):
-                                remove(f'source/{date}.png')
+                        schedule_date = pendulum.today(tz='Europe/Moscow').__format__('DD.MM.YYYY')
+                        if not path.exists(f'uploaded_photo/{schedule_date}.sf'):
+                            if path.exists(f'source/{schedule_date}.png'):
+                                remove(f'source/{schedule_date}.png')
                             self.send_msg(u_id,
                                           'Сейчас попробую найти или скачать расписание с сайта!\nЧуть-чуть терпения!')
-                            create_sf(date)
-                            download_all(date)
+                            download_all(schedule_date)
                             try:
-                                self.load_schedule(date)
+                                self.load_schedule(schedule_date)
                                 self.send_attachment(u_id,
-                                                     'Держи расписание на сегодня!',
+                                                     f'Держи расписание на сегодня!  {cst.smiles_answer[randint(0, 13)]}',
                                                      self.schedules[get_cls(self.db, u_id)])
                             except:
-                                self.send_msg(
-                                    cst.error + 'Произошла ошибка!\nПо-прежнему доступна команда "Расписание", попробуйте её')
+                                self.send_msg(u_id,
+                                              cst.error + '\nПо-прежнему доступна команда "Расписание", попробуйте её 😉')
                         else:
                             try:
-                                self.load_schedule(date)
+                                self.load_schedule(schedule_date)
                                 self.send_attachment(u_id,
-                                                     'Держи расписание на сегодня!',
+                                                     f'Держи расписание на сегодня! {cst.smiles_answer[randint(0, 13)]}',
                                                      self.schedules[get_cls(self.db, u_id)])
                             except:
-                                self.send_msg(
-                                    cst.error + 'Произошла ошибка!\nПо-прежнему доступна команда "Расписание", попробуйте её')
+                                self.send_msg(u_id,
+                                              cst.error + '\nПо-прежнему доступна команда "Расписание", попробуйте её 😉')
                 elif msg == 'общее на сегодня':
                     increase_requests(self.db, u_id)
                     if pendulum.today(tz='Europe/Moscow').weekday() == 6:
                         self.send_msg(u_id, 'Сегодня воскресенье!\nПопробуй запросить расписание на завтра ;-)')
                     else:
-                        date = pendulum.today(tz='Europe/Moscow').__format__('DD.MM.YYYY')
-                        if path.exists(f'source/{date}.png'):
-                            self.send_photo(u_id, f'source/{date}.png',
-                                            f'Держи общее расписание на сегодня '
-                                            f'{cst.smiles_answer[randint(0, 13)]}')
+                        schedule_date = pendulum.today(tz='Europe/Moscow').__format__('DD.MM.YYYY')
+                        if path.exists(f'source/{schedule_date}.png'):
+                            self.load_schedule(schedule_date)
+                            self.send_attachment(u_id,
+                                                 f'Держи общее расписание на сегодня {cst.smiles_answer[randint(0, 13)]}',
+                                                 self.schedules['main'])
                         else:
                             try:
-                                get_picture()
-                                self.send_photo(u_id, f'source/{date}.png',
-                                                f'Держи общее расписание на сегодня '
-                                                f'{cst.smiles_answer[randint(0, 13)]}')
+                                get_picture(schedule_date)
+                                main_schedule = upload_pic(f'source/{schedule_date}.png', VkUpload(self.vk))
+                                self.send_attachment(u_id,
+                                                     f'Держи общее расписание на сегодня {cst.smiles_answer[randint(0, 13)]}',
+                                                     main_schedule)
                             except:
                                 self.send_msg(u_id, cst.error)
                 elif msg == 'общее на завтра':
                     increase_requests(self.db, u_id)
                     if pendulum.today(tz='Europe/Moscow').weekday() == 5:
-                        date = saturday()
+                        schedule_date = saturday()
                     else:
-                        date = pendulum.tomorrow(tz='Europe/Moscow').__format__('DD.MM.YYYY')
+                        schedule_date = pendulum.tomorrow(tz='Europe/Moscow').__format__('DD.MM.YYYY')
 
-                    if path.exists(f'source/{date}.png'):
-                        self.send_photo(u_id, f'source/{date}.png',
-                                        f'Держи общее расписание на завтра '
-                                        f'{cst.smiles_answer[randint(0, 13)]}')
+                    if path.exists(f'source/{schedule_date}.png'):
+                        self.load_schedule(schedule_date)
+                        self.send_attachment(u_id,
+                                             f'Держи общее расписание на сегодня {cst.smiles_answer[randint(0, 13)]}',
+                                             self.schedules['main'])
                     else:
                         try:
-                            get_picture()
-                            self.send_photo(u_id, f'source/{date}.png',
-                                            f'Держи общее расписание на завтра '
-                                            f'{cst.smiles_answer[randint(0, 13)]}')
+                            get_picture(schedule_date)
+                            main_schedule = upload_pic(f'source/{schedule_date}.png', VkUpload(self.vk))
+                            self.send_attachment(u_id,
+                                                 f'Держи общее расписание на сегодня {cst.smiles_answer[randint(0, 13)]}',
+                                                 main_schedule)
                         except:
                             self.send_msg(u_id, cst.error)
+                elif msg == 'звонки':
+                    ring_schedule(self.vk_api, u_id)
+                elif msg == 'настройки':
+                    set_state(self.db, u_id, 3)
+                    Keyboards(self.vk_api).service_keyboard(u_id, get_notifications(self.db, u_id))
                 elif gratitude(msg):
                     increase_gratitude(self.db, u_id)
                     self.send_msg(u_id, cst.answers[randint(0, len(cst.answers) - 1)])
