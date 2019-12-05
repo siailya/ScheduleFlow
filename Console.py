@@ -122,7 +122,7 @@ class Console:
                 send_ids = [i[0] for i in get_by_parallel(self.db, par)]
                 self.send_many_users(send_ids, text)
             except:
-                self.send_console('Лол дебил\nРассылка класс <параллель>_<текст>')
+                self.send_console('Лол дебил\nРассылка параллель <параллель>_<текст>')
         elif 'ответ' in msg[:7]:
             if 'reply_message' in event.obj.keys():
                 try:

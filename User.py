@@ -1,7 +1,9 @@
+import json
 from os import path, listdir, remove
 from pickle import load
 from random import randint
 
+import apiai as apiai
 import pendulum
 from pendulum import *
 from vk_api import VkUpload
@@ -12,7 +14,7 @@ from Constantes import Constantes as cst
 from Keyboards import Keyboards
 from Process import download_all
 from Rings import ring_schedule
-from Utilities import gratitude, smile, get_picture, hello, need_out, upload_pic
+from Utilities import gratitude, smile, need_out
 
 
 def saturday():
@@ -145,8 +147,9 @@ class User:
                     try:
                         d, m = list(map(int, msg.lstrip('расписание на').split('.')))
                         all_date = pendulum.date(pendulum.now().year, m, d).__format__('DD.MM.YYYY')
+                        print(all_date)
                         self.load_schedule(all_date)
-                        if path.exists(f'uploaded_photo/{all_date}.png'):
+                        if path.exists(f'uploaded_photo/{all_date}.sf'):
                             self.send_attachment(u_id, f'Держи общее расписание на {all_date} {cst.smiles_answer[randint(0, 13)]}',
                                                  self.schedules['main'])
                         else:
@@ -156,7 +159,7 @@ class User:
                             self.send_msg(u_id, dates)
                     except:
                         self.send_msg(u_id, cst.error)
-                elif ',' in msg and '.' in msg:
+                elif ',' in msg and '.' in msg and any([i.lower() in msg for i in cst.classes]):
                     increase_requests(self.db, u_id)
                     try:
                         cls, schedule_date = msg.split(',')
@@ -283,20 +286,8 @@ class User:
                         self.send_msg(u_id, 'Сегодня воскресенье!\nПопробуй запросить расписание на завтра ;-)')
                     else:
                         schedule_date = pendulum.today(tz='Europe/Moscow').__format__('DD.MM.YYYY')
-                        if path.exists(f'source/{schedule_date}.png'):
-                            self.load_schedule(schedule_date)
-                            self.send_attachment(u_id,
-                                                 f'Держи общее расписание на сегодня {cst.smiles_answer[randint(0, 13)]}',
-                                                 self.schedules['main'])
-                        else:
-                            try:
-                                get_picture(schedule_date)
-                                main_schedule = upload_pic(f'source/{schedule_date}.png', VkUpload(self.vk))
-                                self.send_attachment(u_id,
-                                                     f'Держи общее расписание на сегодня {cst.smiles_answer[randint(0, 13)]}',
-                                                     main_schedule)
-                            except:
-                                self.send_msg(u_id, cst.error)
+
+                        self.main_schedule_by_date(u_id, schedule_date)
                 elif msg == 'общее на завтра':
                     increase_requests(self.db, u_id)
                     if pendulum.today(tz='Europe/Moscow').weekday() == 5:
@@ -304,20 +295,7 @@ class User:
                     else:
                         schedule_date = pendulum.tomorrow(tz='Europe/Moscow').__format__('DD.MM.YYYY')
 
-                    if path.exists(f'source/{schedule_date}.png'):
-                        self.load_schedule(schedule_date)
-                        self.send_attachment(u_id,
-                                             f'Держи общее расписание на сегодня {cst.smiles_answer[randint(0, 13)]}',
-                                             self.schedules['main'])
-                    else:
-                        try:
-                            get_picture(schedule_date)
-                            main_schedule = upload_pic(f'source/{schedule_date}.png', VkUpload(self.vk))
-                            self.send_attachment(u_id,
-                                                 f'Держи общее расписание на сегодня {cst.smiles_answer[randint(0, 13)]}',
-                                                 main_schedule)
-                        except:
-                            self.send_msg(u_id, cst.error)
+                    self.main_schedule_by_date(u_id, schedule_date)
                 elif msg == 'звонки':
                     ring_schedule(self.vk_api, u_id)
                 elif msg == 'настройки':
@@ -325,20 +303,11 @@ class User:
                     Keyboards(self.vk_api).service_keyboard(u_id, get_notifications(self.db, u_id))
                 elif gratitude(msg):
                     increase_gratitude(self.db, u_id)
-                    self.send_msg(u_id, cst.answers[randint(0, len(cst.answers) - 1)])
+                    self.send_msg(u_id, self.dialog_flow(msg))
                 elif smile(msg):
                     self.send_msg(u_id, cst.smiles_answer[randint(0, 13)])
-                elif hello(msg):
-                    self.send_msg(u_id, 'Ну приветик)')
-                elif 'дарова' in msg:
-                    self.send_msg(u_id, 'Ну дарова, карова')
-                elif 'забей' in msg:
-                    self.send_msg(u_id, 'Не ну это реально забей')
                 else:
-                    if randint(0, 150) >= 120:
-                        self.send_msg(u_id, cst.uni[randint(0, len(cst.uni) - 1)])
-                    else:
-                        self.vk_api.messages.markAsRead(peer_id=u_id)
+                    self.send_msg(u_id, self.dialog_flow(msg))
             elif get_state(self.db, u_id) == 3:
                 name, last, cls, requests = get_by_id(self.db, u_id)[0]
                 if msg == 'помощь':
@@ -379,6 +348,22 @@ class User:
                                          peer_id=uid,
                                          group_id=cst.group_id)
 
+    def main_schedule_by_date(self, u_id, schedule_date):
+        if path.exists(f'uploaded_photo/{schedule_date}.sf'):
+            self.load_schedule(schedule_date)
+            self.send_attachment(u_id,
+                                 f'Держи общее расписание на сегодня {cst.smiles_answer[randint(0, 13)]}',
+                                 self.schedules['main'])
+        else:
+            try:
+                download_all(schedule_date)
+                self.load_schedule(schedule_date)
+                self.send_attachment(u_id,
+                                     f'Держи общее расписание на сегодня {cst.smiles_answer[randint(0, 13)]}',
+                                     self.schedules['main'])
+            except:
+                self.send_msg(u_id, cst.error)
+
     def send_msg(self, send_id, message):
         self.vk_api.messages.send(peer_id=send_id,
                                   message=message,
@@ -406,3 +391,16 @@ class User:
     def load_schedule(self, date=get_schedule_date()):
         with open(f'uploaded_photo/{date}.sf', 'rb') as f:
             self.schedules = load(f)
+
+    def dialog_flow(self, message_text):
+        request = apiai.ApiAI('fe778d3ad8a84e70a89b6fae56356c65').text_request()  # Токен API к Dialogflow
+        request.lang = 'ru'  # На каком языке будет послан запрос
+        request.session_id = 'SFTest'  # ID Сессии диалога (нужно, чтобы потом учить бота)
+        request.query = message_text  # Посылаем запрос к ИИ с сообщением от юзера
+        responseJson = json.loads(request.getresponse().read().decode('utf-8'))
+        response = responseJson['result']['fulfillment']['speech']  # Разбираем JSON и вытаскиваем ответ
+        # Если есть ответ от бота - присылаем юзеру, если нет - бот его не понял
+        if response:
+            return response
+        else:
+            return 'Я тебя не понимаю, прости'
