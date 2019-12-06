@@ -14,7 +14,7 @@ from Constantes import Constantes as cst
 from Keyboards import Keyboards
 from Process import download_all
 from Rings import ring_schedule
-from Utilities import gratitude, smile, need_out
+from Utilities import gratitude, smile
 
 
 def saturday():
@@ -139,10 +139,10 @@ class User:
                 Keyboards(self.vk_api).menu_keyboard(u_id, False)
             elif get_state(self.db, u_id) == 2:
                 name, last, cls, requests = get_by_id(self.db, u_id)[0]
-                if need_out(msg) and u_id not in cst.admins:
-                    self.send_console(f'Сообщение от: @id{u_id}({name} {last}) ({cls}):\n'
-                                      f'{event.obj.text}')
-                elif 'расписание на' in msg:
+                # if need_out(msg) and u_id not in cst.admins:
+                #     self.send_console(f'Сообщение от: @id{u_id}({name} {last}) ({cls}):\n'
+                #                       f'{event.obj.text}')
+                if 'расписание на' in msg:
                     increase_requests(self.db, u_id)
                     try:
                         d, m = list(map(int, msg.lstrip('расписание на').split('.')))
@@ -307,7 +307,9 @@ class User:
                 elif smile(msg):
                     self.send_msg(u_id, cst.smiles_answer[randint(0, 13)])
                 else:
-                    self.send_msg(u_id, self.dialog_flow(msg))
+                    answer = self.dialog_flow(msg)
+                    self.send_console(f'Сообщение от: @id{u_id}({name} {last})\n- {msg}\n- {answer}')
+                    self.send_msg(u_id, answer)
             elif get_state(self.db, u_id) == 3:
                 name, last, cls, requests = get_by_id(self.db, u_id)[0]
                 if msg == 'помощь':
@@ -352,14 +354,14 @@ class User:
         if path.exists(f'uploaded_photo/{schedule_date}.sf'):
             self.load_schedule(schedule_date)
             self.send_attachment(u_id,
-                                 f'Держи общее расписание на сегодня {cst.smiles_answer[randint(0, 13)]}',
+                                 f'Держи общее расписание на {schedule_date} {cst.smiles_answer[randint(0, 13)]}',
                                  self.schedules['main'])
         else:
             try:
                 download_all(schedule_date)
                 self.load_schedule(schedule_date)
                 self.send_attachment(u_id,
-                                     f'Держи общее расписание на сегодня {cst.smiles_answer[randint(0, 13)]}',
+                                     f'Держи общее расписание на {schedule_date} {cst.smiles_answer[randint(0, 13)]}',
                                      self.schedules['main'])
             except:
                 self.send_msg(u_id, cst.error)
@@ -393,13 +395,12 @@ class User:
             self.schedules = load(f)
 
     def dialog_flow(self, message_text):
-        request = apiai.ApiAI('fe778d3ad8a84e70a89b6fae56356c65').text_request()  # Токен API к Dialogflow
-        request.lang = 'ru'  # На каком языке будет послан запрос
-        request.session_id = 'SFTest'  # ID Сессии диалога (нужно, чтобы потом учить бота)
-        request.query = message_text  # Посылаем запрос к ИИ с сообщением от юзера
+        request = apiai.ApiAI(cst.ai_token).text_request()
+        request.lang = 'ru'
+        request.session_id = 'SFTest'
+        request.query = message_text
         responseJson = json.loads(request.getresponse().read().decode('utf-8'))
-        response = responseJson['result']['fulfillment']['speech']  # Разбираем JSON и вытаскиваем ответ
-        # Если есть ответ от бота - присылаем юзеру, если нет - бот его не понял
+        response = responseJson['result']['fulfillment']['speech']
         if response:
             return response
         else:
