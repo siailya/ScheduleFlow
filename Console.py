@@ -168,8 +168,13 @@ class Console:
         elif 'рассылка расписания' in msg:
             if pendulum.today(tz='Europe/Moscow').weekday() == 5:
                 sf_date = saturday()
+                day = 'понедельник'
             else:
                 sf_date = pendulum.tomorrow(tz='Europe/Moscow').__format__('DD.MM.YYYY')
+                day = 'завтра'
+
+            self.send_console('Обновление распсиания')
+            download_all(sf_date)
 
             self.load_schedule_date(sf_date)
             text = ''
@@ -179,7 +184,7 @@ class Console:
                 send_ids = [i[0] for i in get_id_by_class(self.db, i)]
                 if send_ids:
                     try:
-                        self.send_schedule(send_ids, self.schedules[i], text)
+                        self.send_schedule(send_ids, self.schedules[i], day, text)
                         self.send_console(f'Отправлено расписание пользователям {i} класса!')
                     except:
                         self.send_console(f'Ошибка на {i} классе!\nКто-то не получил расписание...')
@@ -341,10 +346,10 @@ class Console:
             f'statistic/stat{date(today().year, today().month, today().day).__format__("DD.MM.YYYY")}.png',
             'Статистика')
 
-    def send_schedule(self, users, schedule, text=''):
+    def send_schedule(self, users, schedule, day, text=''):
         self.vk_api.messages.send(user_ids=users,
                                   attachment=schedule,
-                                  message=f'Держи расписание на завтра! '
+                                  message=f'Держи расписание на {day}! '
                                           f'{cst.smiles_answer[randint(0, len(cst.smiles_answer) - 1)]}\n{text}',
                                   random_id=get_random_id())
 
