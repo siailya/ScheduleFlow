@@ -2,7 +2,7 @@ from math import ceil
 from os import remove
 from pickle import load, dump
 from random import randint
-from shutil import rmtree, copy
+from shutil import rmtree
 
 import matplotlib.pyplot as plt
 import pendulum
@@ -14,7 +14,7 @@ from vk_api.utils import get_random_id
 from Base import *
 from Constantes import Constantes as cst
 from Process import download_all
-from Utilities import get_picture, upload_class, upload_pic
+from Utilities import get_picture, upload_pic
 
 
 def saturday():
@@ -77,26 +77,26 @@ class Console:
         # Keyboards(self.vk_api).conslole_keyboard()
         msg = event.obj.text.lower().replace('@', '')
         if msg == '[club187161295|scheduleflow] обновить':
-            update_time = get_schedule_date()
-            self.send_console(f'Сейчас {now(tz="Europe/Moscow").__format__("DD.MM.YYYY HH:mm")}\nЗагрузка расписания на {update_time}')
+            update_date = get_schedule_date()
+            self.send_console(f'Сейчас {now(tz="Europe/Moscow").__format__("DD.MM.YYYY HH:mm")}\nЗагрузка расписания на {update_date}')
             a = ''
             try:
-                rmtree(f'{update_time}')
+                rmtree(f'{update_date}')
                 a += 'Каталог со старым расписанием удален!\n'
             except FileNotFoundError:
                 a += 'Каталог не найден!\n'
 
             try:
-                remove(f'source/{update_time}.png')
+                remove(f'source/{update_date}.png')
                 a += 'Старый исходник удален!'
             except FileNotFoundError:
                 a += 'Старый исходник не найден'
 
             self.send_console(a)
-            get_picture(update_time)
-            download_all(update_time)
+            get_picture(update_date)
+            download_all(update_date)
             self.load_schedule()
-            self.send_console(f'Расписание на {update_time} обновлено!')
+            self.send_console(f'Расписание на {update_date} обновлено!')
         elif msg == '[club187161295|scheduleflow] статистика':
             self.get_stat()
         elif msg == '[club187161295|scheduleflow] полная статистика':
@@ -173,13 +173,16 @@ class Console:
                 sf_date = pendulum.tomorrow(tz='Europe/Moscow').__format__('DD.MM.YYYY')
                 day = 'завтра'
 
-            self.send_console('Обновление распсиания')
-            download_all(sf_date)
+            if ('не обновлять' not in msg) and ('без обновления' not in msg) and ('без обновы' not in msg):
+                self.send_console('Обновление распсиания')
+                download_all(sf_date)
 
             self.load_schedule_date(sf_date)
             text = ''
-            if msg != 'рассылка расписания':
-                text = event.obj.text[20:]
+
+            if '_' in msg:
+                text = event.obj.text.split('_')[1]
+
             for i in cst.classes:
                 send_ids = [i[0] for i in get_id_by_class(self.db, i)]
                 if send_ids:
@@ -190,6 +193,7 @@ class Console:
                         self.send_console(f'Ошибка на {i} классе!\nКто-то не получил расписание...')
                 else:
                     self.send_console(f'Нет юзеров из {i} класса!')
+
         elif 'sql' in msg:
             req = event.obj.text[4:]
             cur = self.db.cursor()
@@ -200,28 +204,31 @@ class Console:
             ).fetchall()
             self.send_console(f'{res}')
         elif 'ошибка_расписания' in msg:
-            update_time = msg.lstrip('ошибка_расписания ')
+            update_date = msg.lstrip('ошибка_расписания ')
             s = {}
             upload = vk_api.VkUpload(self.vk)
-            for i in cst.classes:
-                copy('labels/error.png', f'{update_time}/{i}.png')
-                s.update({i: upload_class(i, upload, update_time)})
 
-            with open(f'uploaded_photo/{update_time}.sf', 'wb') as f:
+            error = upload_pic('labels/error.png', upload)
+            s.update({'main': error})
+            for i in cst.classes:
+                s.update({i: error})
+
+            with open(f'uploaded_photo/{update_date}.sf', 'wb') as f:
                 dump(s, f)
-            self.send_console(f'Все классы на {update_time} заменены ошибкой!')
+            self.send_console(f'Все классы на {update_date} заменены ошибкой!')
         elif 'замена_общим' in msg:
-            update_time = msg.lstrip('замена_общим ')
+            update_date = msg.lstrip('замена_общим ')
             s = {}
             upload = vk_api.VkUpload(self.vk)
-            main = upload_pic(f'source/{update_time}.png', upload)
+            main = upload_pic(f'source/{update_date}.png', upload)
+            s.update({'main': main})
             for i in cst.classes:
                 print(i, end=' ')
                 s.update({i: main})
 
-            with open(f'uploaded_photo/{update_time}.sf', 'wb') as f:
+            with open(f'uploaded_photo/{update_date}.sf', 'wb') as f:
                 dump(s, f)
-            self.send_console(f'Все классы на {update_time} заменены общим расписанием!')
+            self.send_console(f'Все классы на {update_date} заменены общим расписанием!')
 
     def send_console(self, message):
         self.vk_api.messages.send(peer_id=cst.console_id,
