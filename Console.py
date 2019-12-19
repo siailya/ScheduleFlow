@@ -1,23 +1,69 @@
 from math import ceil
 from os import remove
-from pickle import load
+from pickle import load, dump
 from random import randint
 from shutil import rmtree
 
 import matplotlib.pyplot as plt
-from pendulum import today, date
+import pendulum
+import vk_api
+from pendulum import today, date, tomorrow
 from vk_api import VkUpload
 from vk_api.utils import get_random_id
 
 from Base import *
 from Constantes import Constantes as cst
 from Process import download_all
-from Utilities import get_schedule_date, get_picture
+from Utilities import get_picture, upload_pic
+
+
+def saturday():
+    if tomorrow(tz='Europe/Moscow').day == 31:
+        return date(tomorrow().year, tomorrow().month + 1, 1).__format__('DD.MM.YYYY')
+    elif tomorrow(tz='Europe/Moscow').day == 30:
+        if tomorrow().month in [2, 4, 6, 9, 11]:
+            return date(tomorrow().year, tomorrow().month + 1, 1).__format__('DD.MM.YYYY')
+        else:
+            return date(tomorrow().year, tomorrow().month, 31).__format__('DD.MM.YYYY')
+    else:
+        return date(tomorrow().year, tomorrow().month, tomorrow().day + 1).__format__('DD.MM.YYYY')
+
+
+def get_schedule_date():
+    hr = now(tz='Europe/Moscow').time().hour
+    mt = now(tz='Europe/Moscow').time().minute
+    yr = tomorrow(tz='Europe/Moscow').year
+    mtt = tomorrow(tz='Europe/Moscow').month
+    td = now(tz='Europe/Moscow').weekday()
+    if td == 6:
+        return tomorrow(tz='Europe/Moscow').date().__format__('DD.MM.YYYY')
+    elif td in [0, 1, 2, 3, 4]:
+        if (hr >= 13) and ((hr <= 23) and (mt <= 59)):
+            return tomorrow(tz='Europe/Moscow').date().__format__('DD.MM.YYYY')
+        else:
+            return today(tz='Europe/Moscow').date().__format__('DD.MM.YYYY')
+    else:
+        if (hr >= 13) and ((hr <= 23) and (mt <= 59)):
+            if tomorrow(tz='Europe/Moscow').day + 1 in [30, 31]:
+                if mtt in [1, 3, 5, 7, 8, 10, 12]:
+                    if tomorrow(tz='Europe/Moscow').day + 1 == 31:
+                        return date(yr, mtt + 1, 1).__format__('DD.MM.YYYY')
+                    else:
+                        return date(yr, mtt, 31).__format__('DD.MM.YYYY')
+                else:
+                    if tomorrow(tz='Europe/Moscow').day + 1 == 30:
+                        return date(yr, mtt + 1, 1).__format__('DD.MM.YYYY')
+                    else:
+                        return date(yr, mtt, 30).__format__('DD.MM.YYYY')
+            else:
+                return date(yr, mtt, tomorrow().day + 1).__format__('DD.MM.YYYY')
+        else:
+            return today(tz='Europe/Moscow').date().__format__('DD.MM.YYYY')
 
 
 class Console:
-    def __init__(self, vk_api, event, base, vk):
-        self.vk_api = vk_api
+    def __init__(self, vk_api_get, event, base, vk):
+        self.vk_api = vk_api_get
         self.vk = vk
         self.db = base
         self.schedules = {}
@@ -31,22 +77,26 @@ class Console:
         # Keyboards(self.vk_api).conslole_keyboard()
         msg = event.obj.text.lower().replace('@', '')
         if msg == '[club187161295|scheduleflow] обновить':
-            self.send_console(f'Сейчас {now(tz="Europe/Moscow").__format__("DD.MM.YYYY HH:mm")}\nЗагрузка расписания')
+            update_date = get_schedule_date()
+            self.send_console(f'Сейчас {now(tz="Europe/Moscow").__format__("DD.MM.YYYY HH:mm")}\nЗагрузка расписания на {update_date}')
+            a = ''
             try:
-                a = ''
-                remove(f'uploaded_photo/{get_schedule_date()}.sf')
-                a += 'Старое расписание удалено!\n'
-                rmtree(f'{get_schedule_date()}')
+                rmtree(f'{update_date}')
                 a += 'Каталог со старым расписанием удален!\n'
-                remove(f'source/{get_schedule_date()}.png')
+            except FileNotFoundError:
+                a += 'Каталог не найден!\n'
+
+            try:
+                remove(f'source/{update_date}.png')
                 a += 'Старый исходник удален!'
-                self.send_console(a)
-            except:
-                self.send_console(f'Ошибка какая-то...\n{a}')
-            get_picture()
-            download_all()
+            except FileNotFoundError:
+                a += 'Старый исходник не найден'
+
+            self.send_console(a)
+            get_picture(update_date)
+            download_all(update_date)
             self.load_schedule()
-            self.send_console(f'Расписание на {get_schedule_date()} обновлено!')
+            self.send_console(f'Расписание на {update_date} обновлено!')
         elif msg == '[club187161295|scheduleflow] статистика':
             self.get_stat()
         elif msg == '[club187161295|scheduleflow] полная статистика':
@@ -72,7 +122,7 @@ class Console:
                 send_ids = [i[0] for i in get_by_parallel(self.db, par)]
                 self.send_many_users(send_ids, text)
             except:
-                self.send_console('Лол дебил\nРассылка класс <параллель>_<текст>')
+                self.send_console('Лол дебил\nРассылка параллель <параллель>_<текст>')
         elif 'ответ' in msg[:7]:
             if 'reply_message' in event.obj.keys():
                 try:
@@ -98,10 +148,11 @@ class Console:
             if 'имя' in msg:
                 name, last = [i.title().strip() for i in msg[9:].split(' ')]
                 try:
-                    name, last, cls, uid, requests = get_by_name(self.db, name, last)[0]
+                    name, last, cls, uid, requests, gratitudes = get_by_name(self.db, name, last)[0]
                     self.send_console(f'Пользователь @id{uid}({name} {last}) ({cls})\n'
                                       f'id: {uid}\n'
                                       f'Запросов: {requests}\n'
+                                      f'Благодарностей: {gratitudes}\n'
                                       f'Уведомления: {"включены" if get_notifications(self.db, uid) else "выключены"}')
                 except:
                     self.send_console('Пользователь не найден в базе!')
@@ -115,20 +166,34 @@ class Console:
                 else:
                     self.send_console('Пользователь не найден в базе!')
         elif 'рассылка расписания' in msg:
-            self.load_schedule()
+            if pendulum.today(tz='Europe/Moscow').weekday() == 5:
+                sf_date = saturday()
+                day = 'понедельник'
+            else:
+                sf_date = pendulum.tomorrow(tz='Europe/Moscow').__format__('DD.MM.YYYY')
+                day = 'завтра'
+
+            if ('не обновлять' not in msg) and ('без обновления' not in msg) and ('без обновы' not in msg):
+                self.send_console('Обновление распсиания')
+                download_all(sf_date)
+
+            self.load_schedule_date(sf_date)
             text = ''
-            if msg != 'рассылка расписания':
-                text = event.obj.text[20:]
+
+            if '_' in msg:
+                text = event.obj.text.split('_')[1]
+
             for i in cst.classes:
                 send_ids = [i[0] for i in get_id_by_class(self.db, i)]
                 if send_ids:
                     try:
-                        self.send_schedule(send_ids, self.schedules[i], text)
+                        self.send_schedule(send_ids, self.schedules[i], day, text)
                         self.send_console(f'Отправлено расписание пользователям {i} класса!')
                     except:
                         self.send_console(f'Ошибка на {i} классе!\nКто-то не получил расписание...')
                 else:
                     self.send_console(f'Нет юзеров из {i} класса!')
+
         elif 'sql' in msg:
             req = event.obj.text[4:]
             cur = self.db.cursor()
@@ -138,6 +203,32 @@ class Console:
                 """
             ).fetchall()
             self.send_console(f'{res}')
+        elif 'ошибка_расписания' in msg:
+            update_date = msg.lstrip('ошибка_расписания ')
+            s = {}
+            upload = vk_api.VkUpload(self.vk)
+
+            error = upload_pic('labels/error.png', upload)
+            s.update({'main': error})
+            for i in cst.classes:
+                s.update({i: error})
+
+            with open(f'uploaded_photo/{update_date}.sf', 'wb') as f:
+                dump(s, f)
+            self.send_console(f'Все классы на {update_date} заменены ошибкой!')
+        elif 'замена_общим' in msg:
+            update_date = msg.lstrip('замена_общим ')
+            s = {}
+            upload = vk_api.VkUpload(self.vk)
+            main = upload_pic(f'source/{update_date}.png', upload)
+            s.update({'main': main})
+            for i in cst.classes:
+                print(i, end=' ')
+                s.update({i: main})
+
+            with open(f'uploaded_photo/{update_date}.sf', 'wb') as f:
+                dump(s, f)
+            self.send_console(f'Все классы на {update_date} заменены общим расписанием!')
 
     def send_console(self, message):
         self.vk_api.messages.send(peer_id=cst.console_id,
@@ -146,6 +237,10 @@ class Console:
 
     def load_schedule(self):
         with open(f'uploaded_photo/{get_schedule_date()}.sf', 'rb') as f:
+            self.schedules = load(f)
+
+    def load_schedule_date(self, s_date):
+        with open(f'uploaded_photo/{s_date}.sf', 'rb') as f:
             self.schedules = load(f)
 
     def send_attachment(self, send_id, msg, attachment):
@@ -258,10 +353,10 @@ class Console:
             f'statistic/stat{date(today().year, today().month, today().day).__format__("DD.MM.YYYY")}.png',
             'Статистика')
 
-    def send_schedule(self, users, schedule, text=''):
+    def send_schedule(self, users, schedule, day, text=''):
         self.vk_api.messages.send(user_ids=users,
                                   attachment=schedule,
-                                  message=f'Держи расписание на завтра! '
+                                  message=f'Держи расписание на {day}! '
                                           f'{cst.smiles_answer[randint(0, len(cst.smiles_answer) - 1)]}\n{text}',
                                   random_id=get_random_id())
 

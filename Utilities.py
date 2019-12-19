@@ -40,31 +40,32 @@ def get_schedule_date():
             return today(tz='Europe/Moscow').date().__format__('DD.MM.YYYY')
 
 
-def send_console(s):
+def send_console(message):
     vk = vk_api.VkApi(token=cst.token)
-    vk_apis = vk.get_api()
-    try:
-        vk_apis.messages.send(peer_id=cst.console_id, message=s, random_id=get_random_id())
-    except:
-        vk_apis.messages.send(peer_id=cst.console_id, message='Какая-то ошибка в АПИ, но скрее '
-                                                              'всего, в тебе',
-                              random_id=get_random_id())
+    vk_api_method = vk.get_api()
+    vk_api_method.messages.send(peer_id=cst.console_id, message=message, random_id=get_random_id())
 
 
-def upload_class(cls, upload, date):
-    response = upload.photo_messages(f'{date}/{cls}.png')[0]
+def upload_class(cls, upload, schedule_date):
+    response = upload.photo_messages(f'{schedule_date}/{cls}.png')[0]
     attachment = f'photo{response["owner_id"]}_{response["id"]}_{response["access_key"]}'
     return attachment
 
 
-def get_picture(date=get_schedule_date()):
+def upload_pic(root, upload):
+    response = upload.photo_messages(root)[0]
+    attachment = f'photo{response["owner_id"]}_{response["id"]}_{response["access_key"]}'
+    return attachment
+
+
+def get_picture(pic_date=get_schedule_date()):
     if not path.exists('source'):
         mkdir('source')
     else:
-        if path.exists(f'source/{date}'):
-            remove(f'source/{date}')
-        name = date + ".png"
-        url = 'http://amtek.org/news/data/upimages/' + date + '.png'
+        if path.exists(f'source/{pic_date}'):
+            remove(f'source/{pic_date}')
+        name = pic_date + ".png"
+        url = 'https://амтэк35.рф/wp-content/uploads/' + pic_date + '.png'
         p = requests.get(url)
         out = open(f'source/{name}', "wb")
         out.write(p.content)
@@ -77,7 +78,7 @@ def get_picture(date=get_schedule_date()):
 
 def gratitude(msg):
     for i in ['спасибо', 'спс', 'пасиб', 'сенкс', 'thank', 'от души', 'благодарю', 'мерси',
-              'спасибо!', 'пасиба', 'пасибо' 'псиб', 'тсенкс', 'сэнкс']:
+              'спасибо!', 'пасиба', 'пасибо' 'псиб', 'тсенкс', 'сэнкс', 'спосеба', 'thnks', 'thx']:
         if msg == i or i in msg:
             return True
     return False
@@ -99,7 +100,13 @@ def hello(msg):
 def need_out(msg):
     commands = ['расписание', 'общее расписание', 'расписание звонков', 'настройки',
                 'сменить класс', 'назад', 'выключить уведомления', 'включить уведомления',
-                'без выбора класса']
-    if (msg in commands) or ('расписание на' in msg) or (msg in '567891011абвг'):
+                'без выбора класса', 'на завтра', 'на сегодня', 'общее на завтра',
+                'общее на сегодня', 'звонки']
+    if (msg in commands) or ('расписание на' in msg) or (msg in '567891011абвг') or (gratitude(msg)) or (msg in cst.smiles):
         return False
     return True
+
+
+def create_sf(date_sf):
+    f = open(f'uploaded_photo/{date_sf}.sf', 'wb')
+    f.close()

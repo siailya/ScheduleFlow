@@ -1,3 +1,5 @@
+from random import randint
+
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 from vk_api.utils import get_random_id
 
@@ -18,24 +20,17 @@ class Keyboards:
     def menu_keyboard(self, send_id, c=True):
         keyboard = VkKeyboard(one_time=False)
         if c:
-            keyboard.add_button('Расписание', color=VkKeyboardColor.DEFAULT)
+            keyboard.add_button('На сегодня', color=VkKeyboardColor.DEFAULT)
+            keyboard.add_button('На завтра', color=VkKeyboardColor.DEFAULT)
             keyboard.add_line()
-        keyboard.add_button('Общее расписание', color=VkKeyboardColor.DEFAULT)
-        keyboard.add_button('Расписание звонков', color=VkKeyboardColor.DEFAULT)
+        keyboard.add_button('Общее на сегодня', color=VkKeyboardColor.DEFAULT)
+        keyboard.add_button('Общее на завтра', color=VkKeyboardColor.DEFAULT)
         keyboard.add_line()
+        keyboard.add_button('Звонки', color=VkKeyboardColor.DEFAULT)
         keyboard.add_button('Настройки', color=VkKeyboardColor.PRIMARY)
-        self.vk_api.messages.send(peer_id=send_id, random_id=get_random_id(),
-                                  keyboard=keyboard.get_keyboard(),
-                                  message='Меню')
-
-    def admin_keyboard(self, send_id):
-        keyboard = VkKeyboard(one_time=False)
-        keyboard.add_button('Расписание', color=VkKeyboardColor.DEFAULT)
-        keyboard.add_button('Общее расписание', color=VkKeyboardColor.DEFAULT)
-        keyboard.add_line()
-        keyboard.add_button('Расписание звонков', color=VkKeyboardColor.DEFAULT)
-        keyboard.add_line()
-        keyboard.add_button('Настройки', color=VkKeyboardColor.DEFAULT)
+        if send_id in cst.grt_btn:
+            keyboard.add_line()
+            keyboard.add_button(f'Спасибо {cst.smiles_answer[randint(0, 13)]}', color=VkKeyboardColor.POSITIVE)
         self.vk_api.messages.send(peer_id=send_id, random_id=get_random_id(),
                                   keyboard=keyboard.get_keyboard(),
                                   message='Меню')
@@ -92,17 +87,3 @@ class Keyboards:
         self.vk_api.messages.send(peer_id=cst.console_id, random_id=get_random_id(),
                                   keyboard=keyboard.get_keyboard(),
                                   message='Консольное меню')
-
-    def test_menu_keyboard(self, send_id, c=True):
-        keyboard = VkKeyboard(one_time=False)
-        if c:
-            keyboard.add_button('На сегодня', color=VkKeyboardColor.DEFAULT)
-            keyboard.add_button('На завтра', color=VkKeyboardColor.DEFAULT)
-            keyboard.add_line()
-        keyboard.add_button('Общее расписание', color=VkKeyboardColor.DEFAULT)
-        keyboard.add_button('Расписание звонков', color=VkKeyboardColor.DEFAULT)
-        keyboard.add_line()
-        keyboard.add_button('Настройки', color=VkKeyboardColor.PRIMARY)
-        self.vk_api.messages.send(peer_id=send_id, random_id=get_random_id(),
-                                  keyboard=keyboard.get_keyboard(),
-                                  message='Тестовые возможности!')

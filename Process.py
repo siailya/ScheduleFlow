@@ -1,6 +1,6 @@
-from os import remove, mkdir, path, rmdir
+from os import remove, mkdir, path
 from pickle import dump
-from shutil import copy, rmtree
+from shutil import copy
 
 import cv2
 import numpy as np
@@ -9,63 +9,57 @@ import vk_api.vk_api
 import vk_api.vk_api
 from PIL import Image, ImageFilter
 from pendulum import now
-from transliterate import translit
 from vk_api import VkUpload
 
 from Constantes import Constantes as cst
-from Utilities import get_schedule_date, get_picture, send_console, upload_class
+from Utilities import get_picture, upload_class, send_console, upload_pic
+
+log_time = now(tz="Europe/Moscow").__format__("DD.MM HH:mm")
 
 
 class ScheduleFlow:
-    def __init__(self, class_name, save_name='res', d=get_schedule_date()):
-        name = class_name.upper()
-        if name[:-1] in '567891011' and name[-1] in 'АБВГ':
-            trans = {'А': 'A',
-                     'Б': 'B',
-                     'В': 'V',
-                     'Г': 'G'}
-            name = name[:-1] + trans[name[-1]]
+    def __init__(self, cls_name, schedule_date):
+        class_name = cls_name.upper()
+        trans = {'А': 'A',
+                 'Б': 'B',
+                 'В': 'V',
+                 'Г': 'G'}
+        class_name = class_name[:-1] + trans[class_name[-1]]
 
-            self.d = d
-            self.name = self.d + '.png'
-            if not path.exists(f'source/{self.d}.png'):
-                get_picture()
-                copy(f'source/{self.d}.png', f'{self.d}.png')
-            else:
-                copy(f'source/{self.d}.png', f'{self.d}.png')
+        self.schedule_date = schedule_date
+        self.name = self.schedule_date + '.png'
 
-            self.img = Image.open(self.name)
-            self.img.convert('RGB')
-            self.color = (0, 0, 0)
+        self.img = Image.open(f'source/{self.name}')
+        self.img.convert('RGB')
+        self.color = (0, 0, 0)
 
-            self.crop_for_class(name)
-            self.img = Image.open(self.name)
+        self.crop_for_class(class_name)
+        self.img = Image.open(self.name)
 
-            self.img_rgb = cv2.imread(self.name)
-            self.img_gray = cv2.cvtColor(self.img_rgb, cv2.COLOR_BGR2GRAY)
+        self.img_rgb = cv2.imread(self.name)
+        self.img_gray = cv2.cvtColor(self.img_rgb, cv2.COLOR_BGR2GRAY)
 
-            t_name = 'labels/' + name + '.jpg'
-            template = Image.open(t_name)
-            self.template_w, self.template_h = template.size
+        template_name = 'labels/' + class_name + '.jpg'
+        template = Image.open(template_name)
+        self.template_w, self.template_h = template.size
 
-            self.x, self.y = self.brute_force(t_name)
+        self.x, self.y = self.brute_force(template_name)
 
-            class_schedule = self.img.crop(self.find_box(name))
-            w, h = class_schedule.size
+        class_schedule = self.img.crop(self.find_box(class_name))
+        w, h = class_schedule.size
 
-            self.res = class_schedule.resize((int(w * 1.5), int(h * 1.5)),
-                                             Image.ANTIALIAS).filter(
-                ImageFilter.GaussianBlur(radius=0.1))
-            s_name = self.d + '/' + save_name + '.png'
-            self.res.save(s_name)
-            remove(self.name)
+        self.res = class_schedule.resize((int(w * 1.5), int(h * 1.5)),
+                                         Image.ANTIALIAS).filter(
+            ImageFilter.GaussianBlur(radius=0.1))
+        s_name = self.schedule_date + '/' + cls_name + '.png'
+        self.res.save(s_name)
 
     def brute_force(self, template_name):
         cond = False
         threshold = 0.7
-        e = 0
+        e, x, y = 0, 0, 0
         template = cv2.imread(template_name, 0)
-        while (not cond) and (threshold > 0) and (e <= 30):
+        while (not cond) and (threshold > 0) and (e < 9):
             try:
                 res = cv2.matchTemplate(self.img_gray, template, cv2.TM_CCOEFF_NORMED)
                 loc = np.where(res >= threshold)
@@ -81,16 +75,16 @@ class ScheduleFlow:
                 else:
                     e += 1
                     threshold -= 0.1
-        print(f'y = {y}; e = {e}; th = {threshold};', end=' ')
-        with open(f'log/log_{now().__format__("DD.MM HH:mm")}.txt', encoding='u8', mode='a') as f:
-            f.write(f'y = {y}; e = {e}; th = {threshold} ')
+        print(f'y = {y}; e = {e}; th = {threshold:.1f};', end=' ')
+        with open(f'log/log_{log_time}.txt', encoding='u8', mode='a') as f:
+            f.write(f'y = {y}; e = {e}; th = {threshold:.1f}; ')
         return x, y
 
     def find_box(self, class_name):
         crop_y0 = self.y - 3
         self.color = self.img.getpixel((int(self.x), int(self.y)))
 
-        if class_name not in ['11', '5', '11A', '11B', '11V', '11G', '5G']:
+        if class_name not in ['11A', '11B', '11V', '11G', '5G']:
             delta_y = self.y + 120
             x, y = int(self.x), int(delta_y)
             color = self.img.getpixel((x, y))
@@ -148,86 +142,68 @@ class ScheduleFlow:
         y1 = int(y0 + crop_y)
         tmp = self.img.crop((x0, y0, x1, y1))
         tmp.save(self.name)
-        # tmp.save(f'tmp/{class_name}.png')
+        tmp.save(f'tmp/{class_name}.png')
 
 
-def download_all(date=get_schedule_date()):
-    vk = vk_api.VkApi(token=cst.token)
-    upload = VkUpload(vk)
-    attachments = {}
-    if not path.exists('log'):
-        mkdir('log')
-    with open(f'log/log_{now(tz="Europe/Moscow").__format__("DD.MM HH:mm")}.txt', encoding='u8', mode='w') as f:
-        f.write(f'{pendulum.now(tz="Europe/Moscow").__format__("HH:mm DD.MM.YYYY")}\n'
-                f'Загрузка на {get_schedule_date()}\n')
-        f.close()
-    e = 0
-    d = date
-    print(d)
-    c = True
-    if not path.exists(str(d)):
-        mkdir(str(d))
-    if not path.exists(f'source/{d}.png'):
-        get_picture(d)
+def download_all(date):
+    if not path.exists(date):
+        mkdir(date)
 
-    o = ['А', 'Б', 'В', 'Г']
-    for i in range(5, 12):
-        if i in [5, 10, 11]:
-            for j in range(4):
-                cl = str(i) + o[j]
-                try:
-                    ScheduleFlow(cl, cl, d)
-                    attachments.update({cl: upload_class(cl, upload, d)})
-                except BaseException as k:
-                    e += 1
-                    print(translit(f'\nОшибка {k} ', language_code='ru', reversed=True))
-                    with open(f'log/log_{now().__format__("DD.MM HH:mm")}.txt', encoding='u8', mode='a') as f:
-                        f.write(f'\nОшибка {k} ')
-                        f.close()
-                print(translit(cl, language_code='ru', reversed=True))
-                with open(f'log/log_{now().__format__("DD.MM HH:mm")}.txt', encoding='u8', mode='a') as f:
-                    f.write(f'{cl}\n')
-                    f.close()
-        else:
-            for j in range(3):
-                cl = str(i) + o[j]
-                try:
-                    ScheduleFlow(cl, cl, d)
-                    attachments.update({cl: upload_class(cl, upload, d)})
-                except BaseException as k:
-                    e += 1
-                    print(translit(f'\nОшибка {k} ', language_code='ru', reversed=True))
-                    with open(f'log/log_{now().__format__("DD.MM HH:mm")}.txt', encoding='u8', mode='a') as f:
-                        f.write(f'\nОшибка {k} ')
-                        f.close()
-                print(translit(cl, language_code='ru', reversed=True))
-                with open(f'log/log_{now().__format__("DD.MM HH:mm")}.txt', encoding='u8', mode='a') as f:
-                    f.write(f'{cl}\n')
-                    f.close()
-        if e >= 20:
-            try:
-                rmdir(str(d))
-                remove(f'{str(d)}.png')
-            except:
-                pass
-            with open(f'log/log_{now().__format__("DD.MM HH:mm")}.txt', encoding='u8', mode='a') as f:
-                f.write('Лимит ошибок!')
-                c = False
-            break
-
-    if c:
-        with open(f'uploaded_photo/{d}.sf', 'wb') as f:
-            dump(attachments, f)
-            f.close()
-        with open(f'log/log_{now().__format__("DD.MM HH:mm")}.txt', encoding='u8', mode='r') as f:
-            log = f.read()
-            send_console(f'Лог загрузки расписания на {str(d)}:\n\n{log}')
-            f.close()
-        if not cst.save_files:
-            rmtree(f'{get_schedule_date()}', )
+    picture = False
+    if not path.exists(f'source/{date}.png'):
+        get_picture(date)
+        if path.exists(f'source/{date}.png'):
+            picture = True
     else:
-        send_console(f'Лог загрузки расписания на {str(d)}:\nОдни ошибки')
+        picture = True
+
+    if picture:
+        f = open(f'log/log_{log_time}.txt', encoding='u8', mode='w+')
+        f.write(f'{pendulum.now(tz="Europe/Moscow").__format__("HH:mm DD.MM.YYYY")}\n'
+                f'Загрузка на {date}\n')
+        f.close()
+
+        errors = 0
+        for i in cst.classes:
+            try:
+                ScheduleFlow(i, date)
+                print(i)
+                with open(f'log/log_{log_time}.txt', encoding='u8', mode='a') as f:
+                    f.write(f'{i}\n')
+            except:
+                errors += 1
+                print(f'{i} - ошибка!')
+                with open(f'log/log_{log_time}.txt', encoding='u8', mode='a') as f:
+                    f.write(f'{i} - ошибка!\n')
+                copy('labels/error.png', f'{date}/{i}.png')
+
+        if errors >= 10:
+            with open(f'log/log_{log_time}.txt', encoding='u8', mode='w') as f:
+                f.write('Одни ошибки!')
+
+        with open(f'log/log_{log_time}.txt', encoding='u8', mode='r') as f:
+            send_console(f'Лог обработки расписания на {date}:\n {f.read()}')
+
+        if path.exists(f'{date}.png'):
+            remove(f'{date}.png')
+
+        vk = vk_api.VkApi(token=cst.token)
+        upload = VkUpload(vk)
+
+        uploaded_classes = {}
+        for i in cst.classes:
+            uploaded_classes.update({i: upload_class(i, upload, date)})
+            print(i, end=' ')
+        if picture:
+            uploaded_classes.update({'main': upload_pic(f'source/{date}.png', upload)})
+
+        with open(f'uploaded_photo/{date}.sf', 'wb') as f:
+            dump(uploaded_classes, f)
+    else:
+        send_console(f'🆘 Общее расписание на {date} не найдено!')
+        remove(f'source/{date}.png')
+        remove(date)
 
 
 if __name__ == '__main__':
-    download_all()
+    download_all('04.12.2019')
