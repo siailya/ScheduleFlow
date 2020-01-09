@@ -1,7 +1,5 @@
 vk_api
 pendulum
 apiai
-matplotlib
-opencv-python
 Pillow
 requests
