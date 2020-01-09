@@ -38,6 +38,7 @@ def MainBot():
                         Logger.warning('Exception!')
                         ExceptionLogger.warning(f'Exception {e} caused by {event.obj.message}')
                 elif event.type == VkBotEventType.MESSAGE_DENY:
+                    # TODO: Доделать все events
                     MessagesDeny(event)
                 elif event.type == VkBotEventType.GROUP_JOIN:
                     MemberJoin(event)

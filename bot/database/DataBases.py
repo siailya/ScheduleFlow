@@ -101,7 +101,7 @@ class UserBase:
                     res[0]))
         return None
 
-    def IncreaseParameters(self, user_id, requests=False, gratitudes=False, receives=False, messages_send=False, messages_receive=False, hw_check=False, hw_add=False, ):
+    def IncreaseParameters(self, user_id, requests=False, gratitudes=False, received=False, messages_send=False, messages_receive=False, hw_check=False, hw_add=False, ):
         cur = self.UserBase.cursor()
         if requests:
             cur.execute(f"""
@@ -115,7 +115,7 @@ class UserBase:
                          SET gratitudes = gratitudes + 1
                          WHERE id = {user_id}
                          """).fetchall()
-        if receives:
+        if received:
             cur.execute(f"""
                         UPDATE users
                         SET received = received + 1
@@ -368,7 +368,6 @@ class ScheduleBase:
         self.SchedulesBase.commit()
 
     def Replace(self, schedule_date):
-        print(schedule_date)
         cur = self.SchedulesBase.cursor()
         cur.execute(f"""
                     UPDATE settings
@@ -423,7 +422,7 @@ class SettingsBase:
                               INSERT INTO settings (date, auto_update, main_replace, offline, diary, auto_distribution)
                               VALUES(?, ?, ?, ?, ?, ?)
                               """,
-                              (date, 1, 0, 0, 1, 1))  # TODO: Параметры "подбираются" из предыдущего дня
+                              (date, 1, 0, 0, 1, 1))
             self.SettingsBase.commit()
 
     def ChangeSettings(self, date=GetTodayDate(), parameters=None):

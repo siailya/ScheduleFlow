@@ -9,6 +9,8 @@ from bot.stuff.Utilities import GetScheduleTomorrow
 
 def ClassSend(cls, date):
     ids = UserBase().DistributeClassUsers(cls)
+    for i in ids:
+        UserBase().IncreaseParameters(i, received=True)
     msg = 'Держи расписание на завтра!'
     if today().weekday() == 5:
         msg = 'держи расписание на понедельник!'

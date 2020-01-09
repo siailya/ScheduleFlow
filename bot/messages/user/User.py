@@ -31,7 +31,7 @@ class User:
         else:
             self.Vk.MessageSend(event.obj.message['peer_id'], Answers.OFFLINE)
 
-        self.Users.IncreaseParameters(event.obj.message['peer_id'], requests=self.req, gratitudes=self.grt, receives=self.rec, hw_check=self.hwc, hw_add=self.hwa)
+        self.Users.IncreaseParameters(event.obj.message['peer_id'], requests=self.req, gratitudes=self.grt, received=self.rec, hw_check=self.hwc, hw_add=self.hwa)
 
     def NoText(self, event):
         pass
@@ -51,6 +51,9 @@ class User:
 
         if (not self.Users.CheckUserInBase(user_id)) or (self.Users.GetUserState(user_id) in [1, 2]):
             self.UserRegister(event)
+        elif self.Users.GetUserState(user_id) == -1:
+            self.Users.SetUserParameters(user_id, state=0)
+            self.Vk.MessageSend(user_id, 'Новая клавиатура, новые функции :)', keyboard=Keyboard.MenuKeyboard())
         elif self.Users.GetUserState(user_id) == 3:
             self.UserSettings(user_id, message)
         elif self.Users.GetUserState(user_id) == 4:
@@ -146,7 +149,7 @@ class User:
             if schedule:
                 self.rec = True
                 self.UserLogger.info(f'Расписание отправлено')
-                if pendulum.tomorrow(tz=Utilities.TZ).weekday() == 5:
+                if pendulum.today(tz=Utilities.TZ).weekday() == 5:
                     self.Vk.MessageSend(user_id, Answers.GIVE_MONDAY, attachment=schedule)
                 else:
                     self.Vk.MessageSend(user_id, Answers.GIVE_TOMORROW, attachment=schedule)
@@ -181,7 +184,7 @@ class User:
             if schedule:
                 self.rec = True
                 self.UserLogger.info(f'Расписание отправлено')
-                if pendulum.tomorrow(tz=Utilities.TZ).weekday() == 5:
+                if pendulum.today(tz=Utilities.TZ).weekday() == 5:
                     self.Vk.MessageSend(user_id, Answers.GIVE_MONDAY, attachment=schedule)
 
                 else:
@@ -234,6 +237,7 @@ class User:
                 self.UserLogger.info(f'Запрошено ДЗ на {date}')
                 self.Vk.MessageSend(user_id, f'Домашнее задание {user_info["cls"]} класса на {date}:\n' + HomeworkBase().GetHomework(date, user_info["cls"]))
             elif answer == 'мат':
+                # TODO: Поработать над обработкой intents
                 pass
             elif answer in 'Рад быть полезным 😉 Всегда к вашим услугам 🙂 Пожалуйста! Обращайся еще 🤗 С любовью, ScheduleFlow 🥰 Стараюсь для вас! 😀 Всегда пожалуйста 😉':
                 self.grt = True

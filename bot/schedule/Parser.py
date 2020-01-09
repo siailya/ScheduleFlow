@@ -10,7 +10,8 @@ ParseLogger = GetCustomLogger('ParseLogger', 'ParseLog')
 Logger = GetNewMainLogger('Parser')
 
 
-def Parser():  # TODO: автодобавление/удаление расписаний
+def Parser():
+    # TODO: автодобавление/удаление расписаний
     print('Parsing started!')
     Logger.info('Запущен процесс парсинга')
     PB = ParseBase()

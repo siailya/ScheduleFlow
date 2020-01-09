@@ -64,6 +64,7 @@ class Console:
 
             if lowerText == 'setstat':
                 self.ConsoleBase.ChangeState(0)
+                self.Vk.MessageSend(Config.CONSOLE, 'Меню', keyboard=MainMenu())
             if lowerText == 'raiseexc':
                 raise ValueError
 
