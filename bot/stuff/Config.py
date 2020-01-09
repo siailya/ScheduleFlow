@@ -19,12 +19,12 @@ class Config:
 
     ADMINS = [223632391, 222383631, 66061219]
     if TESTING:
-        TOKEN = '46f3beec75a013ae0556c7558cf031eb56912a7ae17c2e6bd4c8c9c999006a953a9661ca31f3d28ac5dbe'
+        TOKEN = '46f3beec75a013ae0556c78cf031eb56912a7ae17c2e6bd4c8c9c999006a953a9661ca31f3d28ac5dbe'
         CONSOLE = 2000000001
         GROUP_ID = 187427285
         PREFIX = '[club187427285|sftest] '
     else:
-        TOKEN = 'f3d3d7283516f74feee0b753c2e0063e53ffe0bde3f9c99efd0a1ea039310eca2f6c697be8ee7c857ab06'
+        TOKEN = 'f3d3d7283516f74feee0b753c2e0063e53ffe0bde3c99efd0a1ea039310eca2f6c697be8ee7c857ab06'
         CONSOLE = 2000000002
         GROUP_ID = 187161295
         PREFIX = '[club187161295|scheduleflow] '
