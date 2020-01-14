@@ -1,18 +1,14 @@
-from multiprocessing.dummy import Process
-from time import sleep
-
 import pendulum
 
 from bot.Api import Vk, DialogFlow
-from bot.messages.user.Answers import Answers
-from bot.messages.user import Keyboard
 from bot.database.DataBases import SettingsBase, UserBase, ScheduleBase, HomeworkBase
+from bot.messages.user import Keyboard
+from bot.messages.user.Answers import Answers
 from bot.messages.user.Rings import GetRings
 from bot.schedule.GetSchedule import GetSchedule, ScheduleInfo
 from bot.stuff import Utilities
-from bot.stuff.Config import Config
-from bot.stuff.Utilities import GetTodayDate, GetScheduleTomorrow, GetScheduleDate
 from bot.stuff.Logging import GetCustomLogger
+from bot.stuff.Utilities import GetTodayDate, GetScheduleTomorrow, GetScheduleDate
 
 
 class User:
@@ -43,9 +39,6 @@ class User:
         if message == 'raise':
             raise ValueError
         if message == 'beginning':
-            self.Users.SetUserParameters(user_id, state=0)
-            self.Vk.MessageSend(user_id, 'Главное меню', keyboard=Keyboard.MenuKeyboard())
-        if message.lower() == 'начать':
             self.Users.SetUserParameters(user_id, state=0)
             self.Vk.MessageSend(user_id, 'Главное меню', keyboard=Keyboard.MenuKeyboard())
 
@@ -86,7 +79,7 @@ class User:
         elif self.Users.GetUserState(user_id) == 5:
             date = DialogFlow().SendRequest(message)
             if 'system' in date:
-                y, d, m = list(map(int, date.lstrip('system user_class').split('-')))
+                y, m, d = list(map(int, date.lstrip('system user_class').split('-')))
                 hw_date = pendulum.date(y, m, d).__format__(Utilities.FORMAT)
                 self.Users.SetUserParameters(user_id, state=4, hw_date=hw_date)
                 self.Vk.MessageSend(user_id, f'Установлена дата {hw_date}')
@@ -121,8 +114,6 @@ class User:
             self.UserLogger.info(f'Запрошено распсиание на сегодня')
             cls = user_info['cls']
             date = GetTodayDate()
-            if Config.REDIRECT_DATE:
-                date = Config.REDIRECT_DATE
 
             if ScheduleBase().GetReplace(date):
                 cls = 'main'
@@ -140,8 +131,6 @@ class User:
             self.UserLogger.info(f'Запрошено распсиание на завтра')
             cls = user_info['cls']
             date = GetScheduleTomorrow()
-            if Config.REDIRECT_DATE:
-                date = Config.REDIRECT_DATE
 
             if ScheduleBase().GetReplace(date):
                 cls = 'main'
@@ -161,9 +150,6 @@ class User:
             self.UserLogger.info(f'Запрошено общее распсиание на сегодня')
             cls = 'main'
             date = GetTodayDate()
-            if Config.REDIRECT_DATE:
-                date = Config.REDIRECT_DATE
-
             schedule = GetSchedule(date, cls)
             if schedule:
                 self.rec = True
@@ -177,8 +163,6 @@ class User:
             self.UserLogger.info(f'Запрошено общее распсиание на завтра')
             cls = 'main'
             date = GetScheduleTomorrow()
-            if Config.REDIRECT_DATE:
-                date = Config.REDIRECT_DATE
 
             schedule = GetSchedule(date, cls)
             if schedule:
@@ -186,7 +170,6 @@ class User:
                 self.UserLogger.info(f'Расписание отправлено')
                 if pendulum.today(tz=Utilities.TZ).weekday() == 5:
                     self.Vk.MessageSend(user_id, Answers.GIVE_MONDAY, attachment=schedule)
-
                 else:
                     self.Vk.MessageSend(user_id, Answers.GIVE_TOMORROW, attachment=schedule)
             else:

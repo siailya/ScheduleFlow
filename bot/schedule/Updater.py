@@ -49,8 +49,11 @@ def AutoUpdater():
     Logger.info('Запущено авто-обновление')
     Update = UpdateSchedule(GetScheduleDate())
     while True:
-        if Update.CheckClassesUpdate() or Update.CheckMainUpdates():
-            if SettingsBase().GetSettings()['auto_update']:
-                UpdateLogger.info(f'Обновление расписания на {GetScheduleDate()}')
-                Update.UpdateAll()
-        sleep(900)
+        try:
+            if Update.CheckClassesUpdate() or Update.CheckMainUpdates():
+                if SettingsBase().GetSettings()['auto_update']:
+                    UpdateLogger.info(f'Обновление расписания на {GetScheduleDate()}')
+                    Update.UpdateAll()
+            sleep(900)
+        except:
+            print('Update are failed')

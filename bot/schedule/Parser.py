@@ -16,20 +16,23 @@ def Parser():
     Logger.info('Запущен процесс парсинга')
     PB = ParseBase()
     while True:
-        Report = 'Наличие расписаний на сайте:\n'
-        if PB.GetParseSchedules() and PB.CheckParseTime():
-            PB.SetParseTime()
-            for i in sorted(PB.GetParseSchedules()):
-                if CheckAvailabilityOnSite(i):
-                    ParseLogger.info(f'Распсиание на {i} доступно')
-                    Report += f'{i} - ✅\n'
-                else:
-                    ParseLogger.info(f'Распсиание на {i} не доступно')
-                    Report += f'{i} - ⛔\n'
-            if Report:
-                Vk().ConsoleMessage(Report)
-                Vk().ManyMessagesSend(UserBase().TrackList(), Report)
-        sleep(Config.PARSE_INTERVAL)
+        try:
+            Report = 'Наличие расписаний на сайте:\n'
+            if PB.GetParseSchedules() and PB.CheckParseTime():
+                PB.SetParseTime()
+                for i in sorted(PB.GetParseSchedules()):
+                    if CheckAvailabilityOnSite(i):
+                        ParseLogger.info(f'Распсиание на {i} доступно')
+                        Report += f'{i} - ✅\n'
+                    else:
+                        ParseLogger.info(f'Распсиание на {i} не доступно')
+                        Report += f'{i} - ⛔\n'
+                if Report:
+                    Vk().ConsoleMessage(Report)
+                    Vk().ManyMessagesSend(UserBase().TrackList(), Report)
+            sleep(Config.PARSE_INTERVAL)
+        except:
+            print('Parse are failed')
 
 
 def ParseFast():

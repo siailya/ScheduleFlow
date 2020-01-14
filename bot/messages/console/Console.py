@@ -136,7 +136,7 @@ class Console:
             self.ConsoleBase.ChangeState(2)
         elif message[:19] == 'рассылка расписания':
             self.ConsoleBase.ChangeState(3)
-            self.Vk.ConsoleMessage('Введите "Да, выполнить" для подтверждения рассылки расписания')
+            self.Vk.ConsoleMessage(f'Введите "Да, выполнить" для подтверждения рассылки расписания')
         elif message[:4] == 'инфо':
             if message[5:].replace(' ', '').isdigit():
                 uid = int(message[5:].replace(' ', ''))
