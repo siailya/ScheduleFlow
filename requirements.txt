@@ -1,0 +1,5 @@
+vk_api
+pendulum
+apiai
+Pillow
+requests
