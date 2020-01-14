@@ -7,8 +7,39 @@ from bot.messages.user.Answers import Answers
 from bot.messages.user.Rings import GetRings
 from bot.schedule.GetSchedule import GetSchedule, ScheduleInfo
 from bot.stuff import Utilities
+from bot.stuff.Config import Config
 from bot.stuff.Logging import GetCustomLogger
-from bot.stuff.Utilities import GetTodayDate, GetScheduleTomorrow, GetScheduleDate
+from bot.stuff.Utilities import FORMAT, TZ
+
+
+def GetTodayDate():
+    if Config.REDIRECT_DATE:
+        return Config.REDIRECT_DATE
+    return pendulum.now(TZ).__format__(FORMAT)
+
+
+def GetScheduleTomorrow(schedule_date=pendulum.tomorrow(TZ)):
+    if Config.REDIRECT_DATE:
+        return Config.REDIRECT_DATE
+    return schedule_date.__format__(FORMAT) if schedule_date.weekday() != 6 else schedule_date.add(days=2).__format__(FORMAT)
+
+
+def GetScheduleDate():
+    if Config.REDIRECT_DATE:
+        return Config.REDIRECT_DATE
+    hour = pendulum.now(TZ).hour
+    minute = pendulum.now(TZ).minute
+    weekday = pendulum.now(TZ).weekday()
+    if weekday == 6:
+        return pendulum.tomorrow(TZ).__format__(FORMAT)
+    elif weekday < 5:
+        if (hour >= 10) and ((hour <= 23) and (minute <= 59)):
+            return pendulum.tomorrow(TZ).__format__(FORMAT)
+        return pendulum.today(TZ).__format__(FORMAT)
+    else:
+        if (hour >= 10) and ((hour <= 23) and (minute <= 59)):
+            return pendulum.now().add(days=2).__format__(FORMAT)
+        return pendulum.today(TZ).__format__(FORMAT)
 
 
 class User:

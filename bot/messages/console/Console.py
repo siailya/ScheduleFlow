@@ -13,9 +13,21 @@ from bot.schedule.Updater import UpdateSchedule
 from bot.stuff import Utilities
 from bot.stuff.Config import Config
 from bot.stuff.Logging import GetCustomLogger
-from bot.stuff.Utilities import GetScheduleTomorrow, GetTodayDate
+from bot.stuff.Utilities import FORMAT, TZ
 
 Logger = GetCustomLogger('ConsoleLogger', 'ConsoleLog')
+
+
+def GetTodayDate():
+    if Config.REDIRECT_DATE:
+        return Config.REDIRECT_DATE
+    return pendulum.now(TZ).__format__(FORMAT)
+
+
+def GetScheduleTomorrow(schedule_date=pendulum.tomorrow(TZ)):
+    if Config.REDIRECT_DATE:
+        return Config.REDIRECT_DATE
+    return schedule_date.__format__(FORMAT) if schedule_date.weekday() != 6 else schedule_date.add(days=2).__format__(FORMAT)
 
 
 def UserInfo(info):

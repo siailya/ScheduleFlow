@@ -1,5 +1,4 @@
 from multiprocessing import Process
-from time import sleep
 
 import requests
 from vk_api.bot_longpoll import VkBotEventType
@@ -52,21 +51,10 @@ def MainBot():
 
 
 if __name__ == '__main__':
-    while True:
-        ListenProcess = Process(target=MainBot)
-        UpdateProcess = Process(target=AutoUpdater)
-        ParseProcess = Process(target=Parser)
-        print('Initialization...')
-        ListenProcess.start()
-        UpdateProcess.start()
-        ParseProcess.start()
-        sleep(300)
-        print('Restarting processes\n')
-        ListenProcess.terminate()
-        UpdateProcess.terminate()
-        ParseProcess.terminate()
-        try:
-            print('Processes are restarted')
-        except:
-            print('Anything wrong with restarting...')
-            ExceptionLogger.info('Anything wrong with restarting...')
+    ListenProcess = Process(target=MainBot)
+    UpdateProcess = Process(target=AutoUpdater)
+    ParseProcess = Process(target=Parser)
+    print('Initialization...')
+    ListenProcess.start()
+    UpdateProcess.start()
+    ParseProcess.start()

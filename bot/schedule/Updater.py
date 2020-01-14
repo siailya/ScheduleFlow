@@ -1,11 +1,31 @@
 from multiprocessing.dummy import Process
 from time import sleep
 
+import pendulum
+
 from bot.database.DataBases import SettingsBase
 from bot.schedule.Classes import *
 from bot.schedule.FromSite import DownloadScheduleFromSite
 from bot.stuff.Logging import GetNewMainLogger, GetCustomLogger
-from bot.stuff.Utilities import GetScheduleDate
+from bot.stuff.Utilities import FORMAT, TZ
+
+
+def GetScheduleDate():
+    if Config.REDIRECT_DATE:
+        return Config.REDIRECT_DATE
+    hour = pendulum.now(TZ).hour
+    minute = pendulum.now(TZ).minute
+    weekday = pendulum.now(TZ).weekday()
+    if weekday == 6:
+        return pendulum.tomorrow(TZ).__format__(FORMAT)
+    elif weekday < 5:
+        if (hour >= 10) and ((hour <= 23) and (minute <= 59)):
+            return pendulum.tomorrow(TZ).__format__(FORMAT)
+        return pendulum.today(TZ).__format__(FORMAT)
+    else:
+        if (hour >= 10) and ((hour <= 23) and (minute <= 59)):
+            return pendulum.now().add(days=2).__format__(FORMAT)
+        return pendulum.today(TZ).__format__(FORMAT)
 
 
 class UpdateSchedule:

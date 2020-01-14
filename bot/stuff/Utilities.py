@@ -1,6 +1,5 @@
 from pendulum import *
 
-from bot.stuff.Config import Config
 
 TZ = 'Europe/Moscow'
 FORMAT = 'DD.MM.YYYY'
@@ -13,36 +12,6 @@ NEXT_LETTER = {'А': 'Б',
                'Б': 'В',
                'В': 'Г',
                'Г': 'Д'}
-
-
-def GetTodayDate():
-    if Config.REDIRECT_DATE:
-        return Config.REDIRECT_DATE
-    return now(TZ).__format__(FORMAT)
-
-
-def GetScheduleTomorrow(schedule_date=tomorrow(TZ)):
-    if Config.REDIRECT_DATE:
-        return Config.REDIRECT_DATE
-    return schedule_date.__format__(FORMAT) if schedule_date.weekday() != 6 else schedule_date.add(days=2).__format__(FORMAT)
-
-
-def GetScheduleDate():
-    if Config.REDIRECT_DATE:
-        return Config.REDIRECT_DATE
-    hour = now(TZ).hour
-    minute = now(TZ).minute
-    weekday = now(TZ).weekday()
-    if weekday == 6:
-        return tomorrow(TZ).__format__(FORMAT)
-    elif weekday < 5:
-        if (hour >= 10) and ((hour <= 23) and (minute <= 59)):
-            return tomorrow(TZ).__format__(FORMAT)
-        return today(TZ).__format__(FORMAT)
-    else:
-        if (hour >= 10) and ((hour <= 23) and (minute <= 59)):
-            return now().add(days=2).__format__(FORMAT)
-        return today(TZ).__format__(FORMAT)
 
 
 def GetFormat(dialogflow_date: str):

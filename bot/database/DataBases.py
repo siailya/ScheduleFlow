@@ -1,11 +1,16 @@
-import os
 import sqlite3
 
 import pendulum
 
 from bot.stuff import Utilities
 from bot.stuff.Config import Config
-from bot.stuff.Utilities import GetTodayDate
+from bot.stuff.Utilities import FORMAT, TZ
+
+
+def GetTodayDate():
+    if Config.REDIRECT_DATE:
+        return Config.REDIRECT_DATE
+    return pendulum.now(TZ).__format__(FORMAT)
 
 
 class UserBase:
