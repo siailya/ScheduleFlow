@@ -50,6 +50,11 @@ class User:
         self.Settings = SettingsBase()
         self.Schedules = ScheduleBase()
         self.UserLogger = GetCustomLogger('UserLogger', f'userlogs/{event.obj.message["peer_id"]}')
+        self.UserLogger.info(f'info:\n'
+                             f'now - {pendulum.now()}\n'
+                             f'today - {GetTodayDate()}\n'
+                             f'tomorrow_schedule - {GetScheduleTomorrow(pendulum.tomorrow(TZ))}\n'
+                             f'schedule_date - {GetScheduleDate()}')
         if not SettingsBase().GetSettings()['offline']:
             if event.obj.message['text']:
                 self.Message(event)
@@ -161,7 +166,7 @@ class User:
             self.req = True
             self.UserLogger.info(f'Запрошено распсиание на завтра')
             cls = user_info['cls']
-            date = GetScheduleTomorrow()
+            date = GetScheduleTomorrow(pendulum.tomorrow(TZ))
 
             if ScheduleBase().GetReplace(date):
                 cls = 'main'
@@ -193,7 +198,7 @@ class User:
             self.req = True
             self.UserLogger.info(f'Запрошено общее распсиание на завтра')
             cls = 'main'
-            date = GetScheduleTomorrow()
+            date = GetScheduleTomorrow(pendulum.tomorrow(TZ))
 
             schedule = GetSchedule(date, cls)
             if schedule:

@@ -264,22 +264,22 @@ class ScheduleBase:
     def __init__(self):
         self.SchedulesBase = sqlite3.connect(Config.PATH + 'data/Schedules.db')
 
-    def MainUpdate(self, schedule_date):
+    def MainUpdate(self, schedule_date, now):
         self.NewUpdateDay(schedule_date)
         cur = self.SchedulesBase.cursor()
         cur.execute(f"""
                     UPDATE updates
-                    SET main_update = {pendulum.now(tz=Utilities.TZ).timestamp()}
+                    SET main_update = {now.timestamp()}
                     WHERE date = '{schedule_date}'
                     """).fetchall()
         self.SchedulesBase.commit()
 
-    def ClassesUpdate(self, schedule_date):
+    def ClassesUpdate(self, schedule_date, now):
         self.NewUpdateDay(schedule_date)
         cur = self.SchedulesBase.cursor()
         cur.execute(f"""
                     UPDATE updates
-                    SET classes_update = {pendulum.now(tz=Utilities.TZ).timestamp()}
+                    SET classes_update = {now.timestamp()}
                     WHERE date = '{schedule_date}'
                     """).fetchall()
         self.SchedulesBase.commit()
@@ -299,21 +299,21 @@ class ScheduleBase:
         self.SchedulesBase.commit()
         return True
 
-    def DeltaUpdateMain(self, schedule_date):
+    def DeltaUpdateMain(self, schedule_date, now):
         cur = self.SchedulesBase.cursor()
         res = cur.execute(f"""
                           SELECT main_update FROM updates
                           WHERE date = '{schedule_date}'
                           """).fetchall()[0][0]
-        return pendulum.from_timestamp(res, tz=Utilities.TZ).diff(pendulum.now(tz=Utilities.TZ)).in_minutes()
+        return pendulum.from_timestamp(res, tz=Utilities.TZ).diff(now).in_minutes()
 
-    def DeltaUpdateClasses(self, schedule_date):
+    def DeltaUpdateClasses(self, schedule_date, now):
         cur = self.SchedulesBase.cursor()
         res = cur.execute(f"""
                           SELECT classes_update FROM updates
                           WHERE date = '{schedule_date}'
                           """).fetchall()[0][0]
-        return pendulum.from_timestamp(res, tz=Utilities.TZ).diff(pendulum.now(tz=Utilities.TZ)).in_minutes()
+        return pendulum.from_timestamp(res, tz=Utilities.TZ).diff(now).in_minutes()
 
     def UploadedClass(self, schedule_date, cls, link):
         cur = self.SchedulesBase.cursor()

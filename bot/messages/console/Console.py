@@ -8,6 +8,7 @@ from bot.database.DataBases import ConsoleBase, UserBase, StatisticsBase, ParseB
 from bot.messages.console.ConsoleTemp import ConsoleTemp
 from bot.messages.console.Keyboard import *
 from bot.schedule.DisrtibuteSchedule import SendAllClasses
+from bot.schedule.GetSchedule import GetSchedule
 from bot.schedule.Parser import ParseFast
 from bot.schedule.Updater import UpdateSchedule
 from bot.stuff import Utilities
@@ -79,6 +80,10 @@ class Console:
                 self.Vk.MessageSend(Config.CONSOLE, 'Меню', keyboard=MainMenu())
             if lowerText == 'raiseexc':
                 raise ValueError
+            if lowerText == 'params':
+                self.Vk.ConsoleMessage(f'now - {pendulum.now()}\n'
+                                       f'today - {GetTodayDate()}\n'
+                                       f'tomorrow_schedule - {GetScheduleTomorrow(pendulum.tomorrow(TZ))}')
 
             if self.ConsoleBase.GetState() == 0:
                 self.CommandHandler(lowerText)
@@ -108,9 +113,14 @@ class Console:
             elif self.ConsoleBase.GetState() == 3:
                 self.ConsoleBase.ChangeState(0)
                 if lowerText == 'да, выполнить':
-                    send_process = Process(target=SendAllClasses)
-                    send_process.start()
-                    self.Vk.ConsoleMessage('Рассылка расписания запущена!')
+                    if GetSchedule(ConsoleTemp.Date, 'main'):
+                        send_process = Process(target=SendAllClasses, args=(ConsoleTemp.Date, ))
+                        send_process.start()
+                        self.Vk.ConsoleMessage(f'Рассылка расписания на {ConsoleTemp.Date} запущена!')
+                    else:
+                        self.Vk.ConsoleMessage(f'Расписание на {ConsoleTemp.Date} не найдено!\nРассылка отменена!')
+                else:
+                    self.Vk.ConsoleMessage(f'Рассылка отменена!')
 
     def CommandHandler(self, message: str):
         if message.replace('@', '') == Config.PREFIX + 'настройки':
@@ -122,7 +132,7 @@ class Console:
             date = GetTodayDate()
             self.ScheduleUpdate(date)
         elif message.replace('@', '') == Config.PREFIX + 'обновить на завтра':
-            date = GetScheduleTomorrow()
+            date = GetScheduleTomorrow(pendulum.tomorrow(TZ))
             self.ScheduleUpdate(date)
         elif message.replace('@', '') == Config.PREFIX + 'проверить наличие':
             self.Vk.ConsoleMessage(ParseFast())
@@ -147,8 +157,18 @@ class Console:
             self.Vk.ConsoleMessage(Distribution())
             self.ConsoleBase.ChangeState(2)
         elif message[:19] == 'рассылка расписания':
-            self.ConsoleBase.ChangeState(3)
-            self.Vk.ConsoleMessage(f'Введите "Да, выполнить" для подтверждения рассылки расписания')
+            if '_' not in message:
+                date = GetScheduleTomorrow(pendulum.tomorrow(TZ))
+            else:
+                date = message.lstrip('рассылка расписания_')
+
+            if GetSchedule(date, '11А'):
+                ConsoleTemp.Date = date
+                self.ConsoleBase.ChangeState(3)
+                self.Vk.ConsoleMessage(f'Введите "Да, выполнить" для подтверждения рассылки расписания на {date}')
+                self.Vk.MessageSend(Config.CONSOLE, 'Расписание:', attachment=GetSchedule(date, '11А'))
+            else:
+                self.Vk.ConsoleMessage(f'Расписания на {date} нет!')
         elif message[:4] == 'инфо':
             if message[5:].replace(' ', '').isdigit():
                 uid = int(message[5:].replace(' ', ''))
