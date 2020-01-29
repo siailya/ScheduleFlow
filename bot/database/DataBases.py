@@ -16,53 +16,40 @@ def GetTodayDate():
 class UserBase:
     def __init__(self):
         self.UserBase = sqlite3.connect(Config.PATH + 'data/Users.db')
+        self.cur = self.UserBase.cursor()
+
+    def AllUsers(self):
+        users = self.cur.execute(f"""
+                                 SELECT id FROM users
+                                 """).fetchall()
+        if users:
+            return [uid[0] for uid in users]
+        return None
 
     def DistributeClassUsers(self, users_class):
-        cur = self.UserBase.cursor()
-        users = cur.execute(
+        class_users = self.cur.execute(
                             f"""
                             SELECT id FROM users
-                            WHERE cls = '{users_class}' AND notifications = 1
+                            WHERE cls = '{users_class}' AND ("7" = 1 OR "13" = 1 OR "17" = 1 OR "20" = 1 OR "23" = 1)
                             """).fetchall()
-        if users:
-            return [i[0] for i in users]
+        if class_users:
+            return [i[0] for i in class_users]
         return None
 
     def DistributeParallelUsers(self, parallel):
-        cur = self.UserBase.cursor()
-        res = cur.execute(f"""
-                          SELECT id FROM users
-                          WHERE cls_num = '{parallel}'
-                          """).fetchall()
-        if res:
-            return [i[0] for i in res]
+        parallel_users = self.cur.execute(f"""
+                               SELECT id FROM users
+                               WHERE cls_num = '{parallel}'
+                               """).fetchall()
+        if parallel_users:
+            return [i[0] for i in parallel_users]
         return None
 
-    def NotificationList(self):
-        cur = self.UserBase.cursor()
-        res = cur.execute(f"""
-                          SELECT id FROM users
-                          WHERE notifications = 1
-                          """).fetchall()
-        if res:
-            return [i[0] for i in res]
-        return None
-
-    def TrackList(self):
-        cur = self.UserBase.cursor()
-        res = cur.execute(f"""
-                          SELECT id FROM users
-                          WHERE track_schedules = 1
-                          """).fetchall()
-        if res:
-            return [i[0] for i in res]
-        return None
-
-    def AllUsers(self):
-        cur = self.UserBase.cursor()
-        res = cur.execute(f"""
-                          SELECT id FROM users
-                          """).fetchall()
+    def DistributeSchedule(self, users_class, time):
+        res = self.cur.execute(f"""
+                              SELECT id FROM users
+                              WHERE cls = '{users_class}' AND "{time}" = 1
+                              """).fetchall()
         if res:
             return [i[0] for i in res]
         return None
@@ -74,11 +61,10 @@ class UserBase:
         return False
 
     def GetUserState(self, user_id):
-        cur = self.UserBase.cursor()
-        res = cur.execute(f"""
-                          SELECT state FROM users
-                          WHERE id = {user_id}
-                          """).fetchall()
+        res = self.cur.execute(f"""
+                               SELECT state FROM users
+                               WHERE id = {user_id}
+                               """).fetchall()
         if res:
             return res[0][0]
         return None
@@ -86,130 +72,157 @@ class UserBase:
     def GetUserInfo(self, user_id):
         cur = self.UserBase.cursor()
         res = cur.execute(f"""
-                          SELECT id, name, last, cls, cls_num, cls_lit, notifications, track_schedules, requests, gratitudes, received, messages_send, messages_receive, homework_date FROM users
+                          SELECT
+                              id, name, last, cls, cls_num, cls_lit,
+                              requests, received,
+                              msg_send, msg_received,
+                              hw_date, hw_add, hw_check,
+                              "7", "13", "17", "20", "23"
+                          FROM users
                           WHERE id = {user_id}
                           """).fetchall()
         if res:
-            return dict(zip(('id', 'name', 'last', 'cls', 'cls_num', 'cls_lit', 'notifications', 'track_schedules', 'requests', 'gratitudes', 'received', 'messages_send', 'messages_receive', 'homework_date'),
+            return dict(zip(('id', 'name', 'last', 'cls', 'cls_num', 'cls_lit',
+                             'requests', 'received',
+                             'msg_send', 'msg_received',
+                             'hw_date', 'hw_add', 'hw_check',
+                             '7', '13', '17', '20', '23'),
                             res[0]))
         return None
 
     def GetUserInfoByName(self, name, last):
-        cur = self.UserBase.cursor()
-        res = cur.execute(f"""
-                          SELECT id, name, last, cls, state, notifications, track_schedules, requests, gratitudes, received, messages_send, messages_receive FROM users
+        res = self.cur.execute(f"""
+                          SELECT
+                              id, name, last, cls, cls_num, cls_lit,
+                              requests, received,
+                              msg_send, msg_received,
+                              hw_date, hw_add, hw_check,
+                              "7", "13", "17", "20", "23"
+                          FROM users
                           WHERE name = '{name}' AND last = '{last}'
                           """).fetchall()
         if res:
-            return dict(
-                zip(('id', 'name', 'last', 'cls', 'state', 'notifications', 'track_schedules', 'requests', 'gratitudes', 'received', 'messages_send', 'messages_receive'),
-                    res[0]))
+            return dict(zip(('id', 'name', 'last', 'cls', 'cls_num', 'cls_lit',
+                             'requests', 'received',
+                             'msg_send', 'msg_received',
+                             'hw_date', 'hw_add', 'hw_check',
+                             '7', '13', '17', '20', '23'),
+                            res[0]))
         return None
 
-    def IncreaseParameters(self, user_id, requests=False, gratitudes=False, received=False, messages_send=False, messages_receive=False, hw_check=False, hw_add=False, ):
-        cur = self.UserBase.cursor()
+    def IncreaseParameters(self, user_id, requests=False, received=False, messages_send=False, messages_received=False, hw_check=False, hw_add=False):
+        cur = self.cur
         if requests:
             cur.execute(f"""
                         UPDATE users
                         SET requests = requests + 1
                         WHERE id = {user_id}
-                        """).fetchall()
-        if gratitudes:
-            cur.execute(f"""
-                         UPDATE users
-                         SET gratitudes = gratitudes + 1
-                         WHERE id = {user_id}
-                         """).fetchall()
+                        """)
         if received:
             cur.execute(f"""
                         UPDATE users
                         SET received = received + 1
                         WHERE id = {user_id}
-                        """).fetchall()
+                        """)
         if messages_send:
             cur.execute(f"""
                         UPDATE users
-                        SET messages_send = messages_send + 1
+                        SET msg_send = msg_send + 1
                         WHERE id = {user_id}
-                        """).fetchall()
-        if messages_receive:
+                        """)
+        if messages_received:
             cur.execute(f"""
                         UPDATE users
-                        SET messages_receive = messages_receive + 1
+                        SET msg_received = msg_received + 1
                         WHERE id = {user_id}
-                        """).fetchall()
+                        """)
         if hw_check:
             cur.execute(f"""
                         UPDATE users
-                        SET homework_check = homework_check + 1
+                        SET hw_check = hw_check + 1
                         WHERE id = {user_id}
-                        """).fetchall()
-        if hw_check:
+                        """)
+        if hw_add:
             cur.execute(f"""
                         UPDATE users
-                        SET homework_add = homework_add + 1
+                        SET hw_add = hw_add + 1
                         WHERE id = {user_id}
-                        """).fetchall()
+                        """)
         self.UserBase.commit()
 
     def AddNewUser(self, user_id, user_name, user_last):
-        cur = self.UserBase.cursor()
-        res = cur.execute(f"""
-                          INSERT INTO users (id, name, last)
-                          VALUES (?, ?, ?)
-                          """, (user_id, user_name, user_last)).fetchall()
+        self.cur.execute(f"""
+                         INSERT INTO users (id, name, last)
+                         VALUES (?, ?, ?)
+                         """, (user_id, user_name, user_last))
         self.UserBase.commit()
 
     def DeleteUser(self, user_id):
-        cur = self.UserBase.cursor()
-        res = cur.execute(f"""
-                          DELETE FROM users
-                          WHERE id = {user_id}
-                          """).fetchall()
+        self.cur.execute(f"""
+                         DELETE FROM users
+                         WHERE id = {user_id}
+                         """)
         self.UserBase.commit()
 
-    def SetUserParameters(self, user_id, state=None, notifications=None, cls_lit=None, cls_num=None, hw_date=None, track_schedules=None):
-        cur = self.UserBase.cursor()
+    def SetUserParameters(self, user_id, state=None, cls_lit=None, cls_num=None, hw_date=None, n_7=None, n_13=None, n_17=None, n_20=None, n_23=None):
         if state or state == 0:
-            res = cur.execute(f"""
+            self.cur.execute(f"""
                               UPDATE users
                               SET state = {state}
                               WHERE id = {user_id}
-                              """).fetchall()
-        if notifications or notifications == 0:
-            res = cur.execute(f"""
-                              UPDATE users
-                              SET notifications = {notifications}
-                              WHERE id = {user_id}
-                              """).fetchall()
-        if track_schedules or track_schedules == 0:
-            res = cur.execute(f"""
-                              UPDATE users
-                              SET track_schedules = {track_schedules}
-                              WHERE id = {user_id}
-                              """).fetchall()
+                              """)
         if cls_num:
-            res = cur.execute(f"""
-                              UPDATE users
-                              SET cls_num = {cls_num}
-                              WHERE id = {user_id}
-                              """).fetchall()
+            self.cur.execute(f"""
+                             UPDATE users
+                             SET cls_num = {cls_num}
+                             WHERE id = {user_id}
+                             """)
         if cls_lit:
-            cls_num = cur.execute(f"""
-                                  SELECT cls_num FROM users
-                                  WHERE id = {user_id}
-                                  """).fetchall()[0][0]
-            res = cur.execute(f"""
-                              UPDATE users
-                              SET cls_lit = '{cls_lit}', cls = '{cls_num}{cls_lit}'
-                              WHERE id = {user_id}
-                              """).fetchall()
+            cls_num = self.cur.execute(f"""
+                                       SELECT cls_num FROM users
+                                       WHERE id = {user_id}
+                                       """).fetchall()[0][0]
+            self.cur.execute(f"""
+                             UPDATE users
+                             SET cls_lit = '{cls_lit}', cls = '{cls_num}{cls_lit}'
+                             WHERE id = {user_id}
+                             """)
         if hw_date:
-            cur.execute(f"""
-                        UPDATE users
-                        SET homework_date = '{hw_date}'
-                        WHERE id = {user_id}
-                        """)
+            self.cur.execute(f"""
+                             UPDATE users
+                             SET hw_date = '{hw_date}'
+                             WHERE id = {user_id}
+                             """)
+        if n_7 or n_7 == 0:
+            self.cur.execute(f"""
+                             UPDATE users
+                             SET "7" = {n_7}
+                             WHERE id = {user_id}
+                             """)
+        if n_13 or n_13 == 0:
+            self.cur.execute(f"""
+                             UPDATE users
+                             SET "13" = {n_13}
+                             WHERE id = {user_id}
+                             """)
+        if n_17 or n_17 == 0:
+            self.cur.execute(f"""
+                             UPDATE users
+                             SET "17" = {n_17}
+                             WHERE id = {user_id}
+                             """)
+        if n_20 or n_20 == 0:
+            self.cur.execute(f"""
+                             UPDATE users
+                             SET "20" = {n_20}
+                             WHERE id = {user_id}
+                             """)
+        if n_23 or n_23 == 0:
+            self.cur.execute(f"""
+                             UPDATE users
+                             SET "23" = {n_23}
+                             WHERE id = {user_id}
+                             """)
         self.UserBase.commit()
 
 
@@ -372,6 +385,17 @@ class ScheduleBase:
         cur.execute(f"""DROP TABLE IF EXISTS '{schedule_date}'""")
         self.SchedulesBase.commit()
 
+    def UpdateSchedule(self, schedule_date):
+        cur = self.SchedulesBase.cursor()
+        try:
+            res = cur.execute(f"""SELECT * FROM '{schedule_date}'""").fetchall()
+            if res:
+                cur.execute(f"""DROP TABLE IF EXISTS '{schedule_date}'""")
+                self.NewSchedule(schedule_date)
+        except sqlite3.OperationalError:
+            self.NewSchedule(schedule_date)
+        self.SchedulesBase.commit()
+
     def Replace(self, schedule_date):
         cur = self.SchedulesBase.cursor()
         cur.execute(f"""
@@ -427,7 +451,7 @@ class SettingsBase:
                               INSERT INTO settings (date, auto_update, main_replace, offline, diary, auto_distribution)
                               VALUES(?, ?, ?, ?, ?, ?)
                               """,
-                              (date, 1, 0, 0, 1, 1))
+                              (date, 1, 0, 0, 0, 0))
             self.SettingsBase.commit()
 
     def ChangeSettings(self, date=GetTodayDate(), parameters=None):
@@ -547,4 +571,4 @@ class HomeworkBase:
 
 
 if __name__ == '__main__':
-    print(ScheduleBase().GetReplace('28.12.2019'))
+    print(len(UserBase().DistributeClassUsers('11А')))

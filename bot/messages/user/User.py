@@ -21,7 +21,7 @@ def GetTodayDate():
 def GetScheduleTomorrow(schedule_date=pendulum.tomorrow(TZ)):
     if Config.REDIRECT_DATE:
         return Config.REDIRECT_DATE
-    return schedule_date.__format__(FORMAT) if schedule_date.weekday() != 6 else schedule_date.add(days=2).__format__(FORMAT)
+    return schedule_date.__format__(FORMAT) if schedule_date.weekday() != 6 else schedule_date.add(days=1).__format__(FORMAT)
 
 
 def GetScheduleDate():
@@ -44,7 +44,7 @@ def GetScheduleDate():
 
 class User:
     def __init__(self, event):
-        self.req, self.grt, self.rec, self.hwc, self.hwa = False, False, False, False, False
+        self.req, self.rec, self.hwc, self.hwa = False, False, False, False
         self.Vk = Vk()
         self.Users = UserBase()
         self.Settings = SettingsBase()
@@ -63,7 +63,7 @@ class User:
         else:
             self.Vk.MessageSend(event.obj.message['peer_id'], Answers.OFFLINE)
 
-        self.Users.IncreaseParameters(event.obj.message['peer_id'], requests=self.req, gratitudes=self.grt, received=self.rec, hw_check=self.hwc, hw_add=self.hwa)
+        self.Users.IncreaseParameters(event.obj.message['peer_id'], requests=self.req, received=self.rec, hw_check=self.hwc, hw_add=self.hwa)
 
     def NoText(self, event):
         pass
@@ -80,9 +80,6 @@ class User:
 
         if (not self.Users.CheckUserInBase(user_id)) or (self.Users.GetUserState(user_id) in [1, 2]):
             self.UserRegister(event)
-        elif self.Users.GetUserState(user_id) == -1:
-            self.Users.SetUserParameters(user_id, state=0)
-            self.Vk.MessageSend(user_id, 'Новая клавиатура, новые функции :)', keyboard=Keyboard.MenuKeyboard())
         elif self.Users.GetUserState(user_id) == 3:
             self.UserSettings(user_id, message)
         elif self.Users.GetUserState(user_id) == 4:
@@ -226,8 +223,7 @@ class User:
         elif message.lower() == 'настройки':
             self.UserLogger.info(f'Вход в настройки')
             self.Users.SetUserParameters(user_id, state=3)
-            self.Vk.MessageSend(user_id, 'Меню настроек', keyboard=Keyboard.SettingsKeyboard(self.Users.GetUserInfo(user_id)['notifications'],
-                                                                                             self.Users.GetUserInfo(user_id)['track_schedules']))
+            self.Vk.MessageSend(user_id, 'Меню настроек', keyboard=Keyboard.SettingsKeyboard(self.Users.GetUserInfo(user_id)))
         elif message.lower()[:4] == 'инфо':
             info, date, cls = DialogFlow().SendRequest(message).split()
             date = Utilities.GetFormat(date)
@@ -259,7 +255,6 @@ class User:
                 # TODO: Поработать над обработкой intents
                 pass
             elif answer in 'Рад быть полезным 😉 Всегда к вашим услугам 🙂 Пожалуйста! Обращайся еще 🤗 С любовью, ScheduleFlow 🥰 Стараюсь для вас! 😀 Всегда пожалуйста 😉':
-                self.grt = True
                 self.Vk.MessageSend(user_id, answer)
 
     def UserRegister(self, event):
@@ -294,31 +289,52 @@ class User:
             self.UserLogger.info('Запущена процедура смены класса')
             self.Users.SetUserParameters(user_id, state=1)
             self.Vk.MessageSend(user_id, 'Выбери номер класса', keyboard=Keyboard.ChooseClassNum())
-        elif message.lower() == 'включить уведомления':
-            self.UserLogger.info('Включены уведомления')
-            self.Users.SetUserParameters(user_id, notifications=1)
-            self.Vk.MessageSend(user_id, 'Уведомления включены!\nТеперь тебе будет приходить ежедневная рассылка расписания',
-                                keyboard=Keyboard.SettingsKeyboard(self.Users.GetUserInfo(user_id)['notifications'],
-                                                                   self.Users.GetUserInfo(user_id)['track_schedules']))
-        elif message.lower() == 'выключить уведомления':
-            self.UserLogger.info('Уведомления выключены')
-            self.Users.SetUserParameters(user_id, notifications=0)
-            self.Vk.MessageSend(user_id, 'Уведомления выключены!\nБольше ежедневная рассылка не потревожит тебя',
-                                keyboard=Keyboard.SettingsKeyboard(self.Users.GetUserInfo(user_id)['notifications'],
-                                                                   self.Users.GetUserInfo(user_id)['track_schedules']))
-        elif message.lower() == 'отслеживать расписания':
-            self.UserLogger.info('Включен трекинг расписания')
-            self.Users.SetUserParameters(user_id, track_schedules=1)
-            self.Vk.MessageSend(user_id, 'Включил отслеживание для тебя!\nТеперь каждые полчаса тебе будут приходить сообщения о состоянии расписаний на ближайшие дни!',
-                                keyboard=Keyboard.SettingsKeyboard(self.Users.GetUserInfo(user_id)['notifications'],
-                                                                   self.Users.GetUserInfo(user_id)['track_schedules']))
-        elif message.lower() == 'не отслеживать расписания':
-            self.UserLogger.info('Трекинг расписания отключен')
-            self.Users.SetUserParameters(user_id, track_schedules=0)
-            self.Vk.MessageSend(user_id,
-                                'Отслеживание расписаний выключено! Можешь включить снова, если понадобится узнать статус расписаний, либо воспользуйся командой "Инфо <дата> <класс>"',
-                                keyboard=Keyboard.SettingsKeyboard(self.Users.GetUserInfo(user_id)['notifications'],
-                                                                   self.Users.GetUserInfo(user_id)['track_schedules']))
+
+        elif message.lower() == 'вкл 7:00':
+            self.Users.SetUserParameters(user_id, n_7=0)
+            self.Vk.MessageSend(user_id, 'Рассылка расписания на 7:00 отключена!',
+                                keyboard=Keyboard.SettingsKeyboard(self.Users.GetUserInfo(user_id)))
+        elif message.lower() == 'выкл 7:00':
+            self.Users.SetUserParameters(user_id, n_7=1)
+            self.Vk.MessageSend(user_id, 'Рассылка расписания на 7:00 включена!',
+                                keyboard=Keyboard.SettingsKeyboard(self.Users.GetUserInfo(user_id)))
+
+        elif message.lower() == 'вкл 13:00':
+            self.Users.SetUserParameters(user_id, n_13=0)
+            self.Vk.MessageSend(user_id, 'Рассылка расписания на 13:00 отключена!',
+                                keyboard=Keyboard.SettingsKeyboard(self.Users.GetUserInfo(user_id)))
+        elif message.lower() == 'выкл 13:00':
+            self.Users.SetUserParameters(user_id, n_13=1)
+            self.Vk.MessageSend(user_id, 'Рассылка расписания на 13:00 включена!',
+                                keyboard=Keyboard.SettingsKeyboard(self.Users.GetUserInfo(user_id)))
+
+        elif message.lower() == 'вкл 17:00':
+            self.Users.SetUserParameters(user_id, n_17=0)
+            self.Vk.MessageSend(user_id, 'Рассылка расписания на 17:00 отключена!',
+                                keyboard=Keyboard.SettingsKeyboard(self.Users.GetUserInfo(user_id)))
+        elif message.lower() == 'выкл 17:00':
+            self.Users.SetUserParameters(user_id, n_17=1)
+            self.Vk.MessageSend(user_id, 'Рассылка расписания на 17:00 включена!',
+                                keyboard=Keyboard.SettingsKeyboard(self.Users.GetUserInfo(user_id)))
+
+        elif message.lower() == 'вкл 20:00':
+            self.Users.SetUserParameters(user_id, n_20=0)
+            self.Vk.MessageSend(user_id, 'Рассылка расписания на 20:00 отключена!',
+                                keyboard=Keyboard.SettingsKeyboard(self.Users.GetUserInfo(user_id)))
+        elif message.lower() == 'выкл 20:00':
+            self.Users.SetUserParameters(user_id, n_20=1)
+            self.Vk.MessageSend(user_id, 'Рассылка расписания на 20:00 включена!',
+                                keyboard=Keyboard.SettingsKeyboard(self.Users.GetUserInfo(user_id)))
+
+        elif message.lower() == 'вкл 23:00':
+            self.Users.SetUserParameters(user_id, n_23=0)
+            self.Vk.MessageSend(user_id, 'Рассылка расписания на 23:00 отключена!',
+                                keyboard=Keyboard.SettingsKeyboard(self.Users.GetUserInfo(user_id)))
+        elif message.lower() == 'выкл 23:00':
+            self.Users.SetUserParameters(user_id, n_23=1)
+            self.Vk.MessageSend(user_id, 'Рассылка расписания на 23:00 включена!',
+                                keyboard=Keyboard.SettingsKeyboard(self.Users.GetUserInfo(user_id)))
+
         elif message.lower() == 'назад':
             self.UserLogger.info('Выход из меню настроек')
             self.Users.SetUserParameters(user_id, state=0)

@@ -28,7 +28,7 @@ def GetTodayDate():
 def GetScheduleTomorrow(schedule_date=pendulum.tomorrow(TZ)):
     if Config.REDIRECT_DATE:
         return Config.REDIRECT_DATE
-    return schedule_date.__format__(FORMAT) if schedule_date.weekday() != 6 else schedule_date.add(days=2).__format__(FORMAT)
+    return schedule_date.__format__(FORMAT) if schedule_date.weekday() != 6 else schedule_date.add(days=1).__format__(FORMAT)
 
 
 def UserInfo(info):
@@ -257,6 +257,6 @@ class Console:
 
         elif message == Config.PREFIX + 'сброс':
             self.SettingsBase.ChangeSettings(
-                parameters={'auto_update': 1, 'error_replace': 0, 'main_replace': 0, 'offline': 0, 'diary': 1, 'auto_distribution': 1})
+                parameters={'auto_update': 1, 'main_replace': 0, 'offline': 0, 'diary': 0, 'auto_distribution': 0})
 
         self.Vk.MessageSend(Config.CONSOLE, keyboard=Settings(), message='Меню настроек')
