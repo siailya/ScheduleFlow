@@ -21,6 +21,7 @@ def MenuKeyboard():
     keyboard.add_button('Общее на сегодня', color=VkKeyboardColor.DEFAULT)
     keyboard.add_button('Общее на завтра', color=VkKeyboardColor.DEFAULT)
     keyboard.add_line()
+    keyboard.add_button('ГД', color=VkKeyboardColor.PRIMARY)
     keyboard.add_button('Звонки', color=VkKeyboardColor.PRIMARY)
     keyboard.add_button('ДЗ', color=VkKeyboardColor.PRIMARY)
     keyboard.add_line()
