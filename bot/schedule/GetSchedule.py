@@ -8,7 +8,7 @@ from bot.schedule.Updater import UpdateSchedule
 from bot.schedule.Upload import UploadSchedule
 from bot.stuff.Config import Config
 from bot.stuff import Utilities
-from bot.database.DataBases import ScheduleBase
+from bot.database.DataBases import ScheduleBase, SettingsBase
 
 
 def CheckSchedule(schedule_date, cls='main'):
@@ -27,6 +27,8 @@ def CheckSchedule(schedule_date, cls='main'):
 
 
 def GetSchedule(schedule_date, cls='main'):
+    if SettingsBase().GetSettings(schedule_date)['main_replace'] == 1:
+        cls = 'main'
     SB = ScheduleBase()
     if CheckSchedule(schedule_date, cls):
         if SB.GetAttachment(schedule_date, cls):

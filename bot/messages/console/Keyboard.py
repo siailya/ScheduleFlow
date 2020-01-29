@@ -9,9 +9,6 @@ def MainMenu():
     keyboard.add_line()
     keyboard.add_button('Статистика', color=VkKeyboardColor.PRIMARY)
     keyboard.add_button('Настройки', color=VkKeyboardColor.PRIMARY)
-    keyboard.add_line()
-    keyboard.add_button('Проверить наличие', color=VkKeyboardColor.PRIMARY)
-    keyboard.add_button('Список отслеживания', color=VkKeyboardColor.PRIMARY)
     return keyboard.get_keyboard()
 
 

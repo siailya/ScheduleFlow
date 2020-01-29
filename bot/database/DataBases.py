@@ -450,7 +450,7 @@ class SettingsBase:
                               INSERT INTO settings (date, auto_update, main_replace, offline, diary, auto_distribution)
                               VALUES(?, ?, ?, ?, ?, ?)
                               """,
-                              (date, 1, 0, 0, 0, 0))
+                              (date, 1, 0, 0, 0, 1))
             self.SettingsBase.commit()
 
     def ChangeSettings(self, date=GetTodayDate(), parameters=None):

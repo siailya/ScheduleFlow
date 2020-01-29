@@ -25,6 +25,24 @@ def GetTodayDate():
     return pendulum.now(TZ).__format__(FORMAT)
 
 
+def GetScheduleDate():
+    if Config.REDIRECT_DATE:
+        return Config.REDIRECT_DATE
+    hour = pendulum.now(TZ).hour
+    minute = pendulum.now(TZ).minute
+    weekday = pendulum.now(TZ).weekday()
+    if weekday == 6:
+        return pendulum.tomorrow(TZ).__format__(FORMAT)
+    elif weekday < 5:
+        if (hour >= 10) and ((hour <= 23) and (minute <= 59)):
+            return pendulum.tomorrow(TZ).__format__(FORMAT)
+        return pendulum.today(TZ).__format__(FORMAT)
+    else:
+        if (hour >= 10) and ((hour <= 23) and (minute <= 59)):
+            return pendulum.now().add(days=2).__format__(FORMAT)
+        return pendulum.today(TZ).__format__(FORMAT)
+
+
 def GetScheduleTomorrow(schedule_date=pendulum.tomorrow(TZ)):
     if Config.REDIRECT_DATE:
         return Config.REDIRECT_DATE
@@ -241,11 +259,11 @@ class Console:
 
         elif message == Config.PREFIX + 'замена общим вкл' and self.SettingsBase.GetSettings()['main_replace']:
             self.SettingsBase.ChangeSettings(parameters={'main_replace': 0})
-            ScheduleBase().Replace(GetTodayDate())
+            ScheduleBase().Replace(GetScheduleDate())
             Logger.info('Замена общим включена')
         elif message == Config.PREFIX + 'замена общим выкл' and not self.SettingsBase.GetSettings()['main_replace']:
             self.SettingsBase.ChangeSettings(parameters={'main_replace': 1})
-            ScheduleBase().UnReplace(GetTodayDate())
+            ScheduleBase().UnReplace(GetScheduleDate())
             Logger.info('Замена общим выключена')
 
         elif message == Config.PREFIX + 'дневник вкл' and self.SettingsBase.GetSettings()['diary']:

@@ -208,7 +208,7 @@ class User:
             else:
                 self.UserLogger.info(f'Расписание не отправлено')
                 self.Vk.MessageSend(user_id, Answers.TOMORROW_NONE)
-        elif message.lower() == 'гд':
+        elif message.lower() == 'гд':  # ToDo: Сделать DialogFlow, либо изменить вид, выглядит так себе
             self.Vk.MessageSend(user_id, f'Гугл-Диск {self.Users.GetUserInfo(user_id)["cls"]} класса:\n' + Utilities.GD[self.Users.GetUserInfo(user_id)['cls']] + f'\n\nОбщий Гугл-диск:\n' + Utilities.GD['main'])
         elif message.lower() == 'звонки':
             self.req = True

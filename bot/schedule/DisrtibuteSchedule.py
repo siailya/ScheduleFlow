@@ -3,7 +3,7 @@ from time import sleep
 import pendulum
 
 from bot.Api import Vk
-from bot.database.DataBases import UserBase
+from bot.database.DataBases import UserBase, SettingsBase
 from bot.schedule.GetSchedule import GetSchedule
 from bot.schedule.Updater import UpdateSchedule
 from bot.stuff import Utilities
@@ -92,7 +92,9 @@ def AutoDistribution():
             sleep_time, time = NextDistributeWait(pendulum.now(TZ))
             print('Wait to distribute', sleep_time)
             sleep(sleep_time)
-            SendAllTime(GetScheduleDate(pendulum.now()), time)
+            if SettingsBase().GetSettings(pendulum.now().__format__(FORMAT))['auto_distribution']:
+                SendAllTime(GetScheduleDate(pendulum.now()), time)
+            sleep(10)
         except:
             print('Distribute Error!')
             sleep(30)
