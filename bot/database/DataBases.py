@@ -259,18 +259,17 @@ class StatisticsBase:
         res = cur.execute(f"""
                           SELECT
                           COUNT(*) as total_users,
-                          SUM(requests) as total_requests,
-                          SUM(gratitudes) as total_gratitudes,
-                          SUM(received) as total_received,
-                          SUM(messages_send) as total_send,
-                          SUM(messages_receive) as total_receive,
-                          SUM(messages_send) + SUM(messages_receive) as total_messages
+                          SUM(requests) as requests,
+                          SUM(received) as schedule_received,
+                          SUM(msg_send) as msg_send,
+                          SUM(msg_received) as msg_received,
+                          SUM(msg_send) + SUM(msg_received) as total_msg
                           FROM users
                           """).fetchall()
-        res2 = cur.execute(f"""SELECT COUNT(*) as total_notifications FROM users WHERE notifications = 1""").fetchall()[0]
+        res2 = cur.execute(f"""SELECT COUNT(*) as total_notifications FROM users WHERE "7" = 1 OR "13" = 1 OR "17" = 1 OR "20" = 1 OR "23" = 1""").fetchall()[0]
         res = list(res[0])
         res.append(res2[0])
-        return dict(zip(('total_users', 'total_requests', 'total_gratitudes', 'total_received', 'total_send', 'total_receive', 'total_messages', 'total_notifications'), res))
+        return dict(zip(('total_users', 'requests', 'schedule_received', 'msg_send', 'msg_received', 'total_msg', 'total_notifications'), res))
 
 
 class ScheduleBase:

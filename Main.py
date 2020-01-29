@@ -37,7 +37,7 @@ def MainBot():
                             Vk.ConsoleMessage(f'Ошибка: {e} caused by {event.obj.message}')
                             Logger.warning('Exception!')
                             ExceptionLogger.warning(f'Exception {e} caused by {event.obj.message}')
-                    elif event.type == VkBotEventType.MESSAGE_DENY:  # TODO: Все ивенты
+                    elif event.type == VkBotEventType.MESSAGE_DENY:
                         MessagesDeny(event)
                     elif event.type == VkBotEventType.GROUP_JOIN:
                         MemberJoin(event)

@@ -269,7 +269,7 @@ class User:
             self.Users.SetUserParameters(user_id, state=1)
 
         elif self.Users.GetUserState(user_id) == 1:
-            if message in '567891011':
+            if message in '5 6 7 8 9 10 11':
                 self.UserLogger.info(f'Выбран {message} класс')
                 self.Users.SetUserParameters(user_id, state=2, cls_num=int(message))
                 class_num = self.Users.GetUserInfo(user_id)['cls_num']
@@ -282,7 +282,8 @@ class User:
             if ((message.lower() in 'абв') and (not g_class)) or ((message.lower() in 'абвг') and g_class):
                 self.UserLogger.info(f'Установлен {class_num}{message} класс')
                 self.Users.SetUserParameters(user_id, state=0, cls_lit=message)
-                self.Vk.MessageSend(user_id, 'Замечательно! Ты всегда можешь изменить свой класс в настройках!', keyboard=Keyboard.MenuKeyboard())
+                self.Vk.MessageSend(user_id, f'Замечательно! Выбран {self.Users.GetUserInfo(user_id)["cls"]} класс! Ты всегда можешь изменить свой класс в настройках!', keyboard=Keyboard.MenuKeyboard())
+                self.Vk.ConsoleMessage(f'✅ Новый юзер: @id{user_id}({self.Users.GetUserInfo(user_id)["name"]} {self.Users.GetUserInfo(user_id)["last"]}) - {self.Users.GetUserInfo(user_id)["cls"]} класс')
 
     def UserSettings(self, user_id, message):
         if message.lower() == 'сменить класс':

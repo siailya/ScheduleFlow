@@ -46,13 +46,13 @@ def UserInfo(info):
 
 def ScheduleFlowInfo():
     statistics = StatisticsBase().GetMainStatistics()
-    return f'Запросов: {statistics["total_requests"]}\n' \
+    return f'Запросов: {statistics["requests"]}\n' \
            f'Юзеров в базе: {statistics["total_users"]}\n' \
            f'Юзеров с уведомлениями: {statistics["total_notifications"]}\n' \
-           f'Получено расписаний: {statistics["total_received"]}\n\n' \
-           f'Отправлено сообщений: {statistics["total_send"]}\n' \
-           f'Получено сообщений: {statistics["total_receive"]}\n' \
-           f'Всего сообщений: {statistics["total_messages"]}'
+           f'Получено расписаний: {statistics["schedule_received"]}\n\n' \
+           f'Отправлено сообщений: {statistics["msg_send"]}\n' \
+           f'Получено сообщений: {statistics["msg_received"]}\n' \
+           f'Всего сообщений: {statistics["total_msg"]}'
 
 
 def Distribution():
@@ -143,7 +143,7 @@ class Console:
             self.ScheduleUpdate(date)
         elif message[:14] == 'общая рассылка':
             ConsoleTemp.Distribute = 'all'
-            ConsoleTemp.Text = message[15:].capitalize()
+            ConsoleTemp.Text = message[15:]
             self.Vk.ConsoleMessage(Distribution())
             self.ConsoleBase.ChangeState(2)
         elif message[:18] == 'рассылка по классу':
