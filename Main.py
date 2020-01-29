@@ -6,7 +6,6 @@ from vk_api.bot_longpoll import VkBotEventType
 from bot.Api import Vk
 from bot.events.Events import MessagesDeny, MemberLeave, MemberJoin, Comment
 from bot.messages.NewMessage import NewMessage
-from bot.schedule.Parser import Parser
 from bot.schedule.Updater import AutoUpdater
 from bot.stuff.Config import Config as Config
 from bot.stuff.Logging import GetMainLogger, GetCustomLogger
@@ -36,7 +35,7 @@ def MainBot():
                         Vk.ConsoleMessage(f'Ошибка: {e} caused by {event.obj.message}')
                         Logger.warning('Exception!')
                         ExceptionLogger.warning(f'Exception {e} caused by {event.obj.message}')
-                elif event.type == VkBotEventType.MESSAGE_DENY:
+                elif event.type == VkBotEventType.MESSAGE_DENY:  # TODO: Все ивенты
                     MessagesDeny(event)
                 elif event.type == VkBotEventType.GROUP_JOIN:
                     MemberJoin(event)
@@ -53,8 +52,8 @@ def MainBot():
 if __name__ == '__main__':
     ListenProcess = Process(target=MainBot)
     UpdateProcess = Process(target=AutoUpdater)
-    ParseProcess = Process(target=Parser)
+    # ParseProcess = Process(target=Parser)
     print('Initialization...')
     ListenProcess.start()
     UpdateProcess.start()
-    ParseProcess.start()
+    # ParseProcess.start()

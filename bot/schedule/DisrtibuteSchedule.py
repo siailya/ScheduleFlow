@@ -1,9 +1,9 @@
 import pendulum
-from pendulum import today
 
 from bot.Api import Vk
 from bot.database.DataBases import UserBase
 from bot.schedule.GetSchedule import GetSchedule
+from bot.schedule.Updater import UpdateSchedule
 from bot.stuff import Utilities
 from bot.stuff.Config import Config
 from bot.stuff.Utilities import FORMAT, TZ
@@ -19,13 +19,13 @@ def ClassSend(cls, date):
     ids = UserBase().DistributeClassUsers(cls)
     for i in ids:
         UserBase().IncreaseParameters(i, received=True, messages_receive=True)
-    msg = 'Держи расписание на завтра!'
-    if today().weekday() == 5:
-        msg = 'держи расписание на понедельник!'
+    msg = f'Держи расписание на {date}!'
     schedule = GetSchedule(date, cls)
-    Vk().ManyMessagesSend(ids, msg, attachment=schedule)
+    if schedule:
+        Vk().ManyMessagesSend(ids, msg, attachment=schedule)
 
 
 def SendAllClasses(date=GetScheduleTomorrow()):
+    UpdateSchedule(date).UpdateAll()
     for i in Utilities.CLASSES:
         ClassSend(i, date)

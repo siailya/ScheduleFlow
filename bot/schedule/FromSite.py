@@ -1,9 +1,11 @@
+import pendulum
 import requests
 from PIL import Image, ImageDraw, ImageFont
 from pendulum import now
 
 from bot.database.DataBases import ScheduleBase
 from bot.stuff.Config import Config
+from bot.stuff.Utilities import TZ
 
 
 def CheckAvailabilityOnSite(schedule_date):
@@ -22,7 +24,7 @@ def DownloadScheduleFromSite(schedule_date):
         out.write(p.content)
         out.close()
         UpdateTimeMainWatermark(schedule_date)
-        ScheduleBase().MainUpdate(schedule_date)
+        ScheduleBase().MainUpdate(schedule_date, pendulum.now(TZ))
         return True
     return False
 

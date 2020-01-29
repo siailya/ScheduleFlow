@@ -1,12 +1,13 @@
 from os import remove, mkdir, path
 
-
-from PIL import Image, ImageFilter, ImageDraw, ImageFont
-from pendulum import now, from_timestamp
+import pendulum
+from PIL import Image, ImageDraw, ImageFont
+from pendulum import from_timestamp
 
 from bot.database.DataBases import ScheduleBase
-from bot.stuff.Config import Config
 from bot.stuff import Utilities
+from bot.stuff.Config import Config
+from bot.stuff.Utilities import TZ
 
 
 def OnlyHeaders(image):
@@ -79,7 +80,7 @@ def CropClass(image, cls, marking):
 
 
 def CropAllClasses(date):
-    ScheduleBase().ClassesUpdate(date)
+    ScheduleBase().ClassesUpdate(date, pendulum.now(TZ))
     if not path.exists(Config.PATH + f'work/schedules/{date}'):
         mkdir(Config.PATH + f'work/schedules/{date}')
     try:

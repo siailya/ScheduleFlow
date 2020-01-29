@@ -33,6 +33,7 @@ def Parser():
             sleep(Config.PARSE_INTERVAL)
         except:
             print('Parse are failed')
+            sleep(20)
 
 
 def ParseFast():
