@@ -18,6 +18,14 @@ class UserBase:
         self.UserBase = sqlite3.connect(Config.PATH + 'data/Users.db')
         self.cur = self.UserBase.cursor()
 
+    def SQL(self, sql):
+        users = self.cur.execute(f"""
+                                 {sql}
+                                 """).fetchall()
+        if users:
+            return [uid[0] for uid in users]
+        return None
+
     def AllUsers(self):
         users = self.cur.execute(f"""
                                  SELECT id FROM users
@@ -567,7 +575,3 @@ class HomeworkBase:
                     WHERE class = '{cls}'
                     """)
         self.HomeworkBase.commit()
-
-
-if __name__ == '__main__':
-    print(len(UserBase().DistributeClassUsers('11А')))
