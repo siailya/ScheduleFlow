@@ -1,6 +1,9 @@
 from multiprocessing.dummy import Process
 from time import sleep
 
+import vk_api
+
+from bot.Api import Vk
 from bot.database.DataBases import SettingsBase
 from bot.schedule.Classes import *
 from bot.schedule.FromSite import DownloadScheduleFromSite
@@ -38,7 +41,7 @@ class UpdateSchedule:
         CropAllClasses(self.date)
 
     def UpdateAll(self):
-        self.ScheduleBase.DeleteSchedule(self.date)
+        self.ScheduleBase.UpdateSchedule(self.date)
         if DownloadScheduleFromSite(self.date):
             update_process = Process(target=self.UpdateClasses)
             update_process.start()
@@ -65,15 +68,21 @@ def AutoUpdater():
     Logger = GetNewMainLogger('Updater')
     UpdateLogger = GetCustomLogger('UpdateLogger', 'UpdateLog')
     Logger.info('Запущено авто-обновление')
-    Update = UpdateSchedule(GetScheduleDate(pendulum.now()))
     while True:
+        schedule_date = GetScheduleDate(pendulum.now())
+        Update = UpdateSchedule(schedule_date)
+        try:
+            Vk().SetOnline()
+        except vk_api.exceptions.ApiError:
+            pass
         try:
             if Update.CheckClassesUpdate() or Update.CheckMainUpdates():
                 if SettingsBase().GetSettings()['auto_update']:
-                    UpdateLogger.info(f'Обновление расписания на {GetScheduleDate(pendulum.now(TZ))}')
-                    print(f'Update to {GetScheduleDate(pendulum.now(TZ))}')
+                    ScheduleBase().UpdateSchedule(schedule_date)
+                    UpdateLogger.info(f'Обновление расписания на {schedule_date}')
+                    print(f'Update to {schedule_date}')
                     Update.UpdateAll()
-            sleep(900)
+            sleep(910)
         except:
             print('Update are failed')
             sleep(30)

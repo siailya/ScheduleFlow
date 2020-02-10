@@ -11,7 +11,7 @@ Logger = GetNewMainLogger('Parser')
 
 
 def Parser():
-    # TODO: автодобавление/удаление расписаний
+    # NOT_TODO: автодобавление/удаление расписаний
     print('Parsing started!')
     Logger.info('Запущен процесс парсинга')
     PB = ParseBase()

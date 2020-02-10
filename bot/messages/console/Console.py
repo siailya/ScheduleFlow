@@ -25,10 +25,28 @@ def GetTodayDate():
     return pendulum.now(TZ).__format__(FORMAT)
 
 
+def GetScheduleDate():
+    if Config.REDIRECT_DATE:
+        return Config.REDIRECT_DATE
+    hour = pendulum.now(TZ).hour
+    minute = pendulum.now(TZ).minute
+    weekday = pendulum.now(TZ).weekday()
+    if weekday == 6:
+        return pendulum.tomorrow(TZ).__format__(FORMAT)
+    elif weekday < 5:
+        if (hour >= 10) and ((hour <= 23) and (minute <= 59)):
+            return pendulum.tomorrow(TZ).__format__(FORMAT)
+        return pendulum.today(TZ).__format__(FORMAT)
+    else:
+        if (hour >= 10) and ((hour <= 23) and (minute <= 59)):
+            return pendulum.now().add(days=2).__format__(FORMAT)
+        return pendulum.today(TZ).__format__(FORMAT)
+
+
 def GetScheduleTomorrow(schedule_date=pendulum.tomorrow(TZ)):
     if Config.REDIRECT_DATE:
         return Config.REDIRECT_DATE
-    return schedule_date.__format__(FORMAT) if schedule_date.weekday() != 6 else schedule_date.add(days=2).__format__(FORMAT)
+    return schedule_date.__format__(FORMAT) if schedule_date.weekday() != 6 else schedule_date.add(days=1).__format__(FORMAT)
 
 
 def UserInfo(info):
@@ -46,13 +64,15 @@ def UserInfo(info):
 
 def ScheduleFlowInfo():
     statistics = StatisticsBase().GetMainStatistics()
-    return f'Запросов: {statistics["total_requests"]}\n' \
+    return f'Запросов: {statistics["requests"]}\n' \
            f'Юзеров в базе: {statistics["total_users"]}\n' \
            f'Юзеров с уведомлениями: {statistics["total_notifications"]}\n' \
-           f'Получено расписаний: {statistics["total_received"]}\n\n' \
-           f'Отправлено сообщений: {statistics["total_send"]}\n' \
-           f'Получено сообщений: {statistics["total_receive"]}\n' \
-           f'Всего сообщений: {statistics["total_messages"]}'
+           f'Получено расписаний: {statistics["schedule_received"]}\n\n' \
+           f'Отправлено сообщений: {statistics["msg_send"]}\n' \
+           f'Получено сообщений: {statistics["msg_received"]}\n' \
+           f'Всего сообщений: {statistics["total_msg"]}\n\n' \
+           f'Запуск: {Utilities.INIT_TIME}\n' \
+           f'Uptime: {Utilities.INIT_TIME.diff(pendulum.now(TZ)).in_words(locale="ru")}'
 
 
 def Distribution():
@@ -114,7 +134,7 @@ class Console:
                 self.ConsoleBase.ChangeState(0)
                 if lowerText == 'да, выполнить':
                     if GetSchedule(ConsoleTemp.Date, 'main'):
-                        send_process = Process(target=SendAllClasses, args=(ConsoleTemp.Date, ))
+                        send_process = Process(target=SendAllClasses, args=(ConsoleTemp.Date,))
                         send_process.start()
                         self.Vk.ConsoleMessage(f'Рассылка расписания на {ConsoleTemp.Date} запущена!')
                     else:
@@ -143,7 +163,7 @@ class Console:
             self.ScheduleUpdate(date)
         elif message[:14] == 'общая рассылка':
             ConsoleTemp.Distribute = 'all'
-            ConsoleTemp.Text = message[15:].capitalize()
+            ConsoleTemp.Text = message[15:]
             self.Vk.ConsoleMessage(Distribution())
             self.ConsoleBase.ChangeState(2)
         elif message[:18] == 'рассылка по классу':
@@ -201,6 +221,12 @@ class Console:
             cls, date = message.lower().lstrip('удалить дз').upper().replace(',', '').split(' ')
             HomeworkBase().DeleteHomework(date, cls)
             self.Vk.ConsoleMessage('ДЗ удалено!')
+        elif 'редирект' in message.lower():
+            date = message.lstrip('редирект на')
+            if date != 'сброс':
+                Config.REDIRECT_DATE = date
+            else:
+                Config.REDIRECT_DATE = 0
 
     def ScheduleUpdate(self, date):
         self.Vk.ConsoleMessage(f'Обновление расписания на {date}')
@@ -241,11 +267,11 @@ class Console:
 
         elif message == Config.PREFIX + 'замена общим вкл' and self.SettingsBase.GetSettings()['main_replace']:
             self.SettingsBase.ChangeSettings(parameters={'main_replace': 0})
-            ScheduleBase().Replace(GetTodayDate())
+            ScheduleBase().Replace(GetScheduleDate())
             Logger.info('Замена общим включена')
         elif message == Config.PREFIX + 'замена общим выкл' and not self.SettingsBase.GetSettings()['main_replace']:
             self.SettingsBase.ChangeSettings(parameters={'main_replace': 1})
-            ScheduleBase().UnReplace(GetTodayDate())
+            ScheduleBase().UnReplace(GetScheduleDate())
             Logger.info('Замена общим выключена')
 
         elif message == Config.PREFIX + 'дневник вкл' and self.SettingsBase.GetSettings()['diary']:
@@ -257,6 +283,6 @@ class Console:
 
         elif message == Config.PREFIX + 'сброс':
             self.SettingsBase.ChangeSettings(
-                parameters={'auto_update': 1, 'error_replace': 0, 'main_replace': 0, 'offline': 0, 'diary': 1, 'auto_distribution': 1})
+                parameters={'auto_update': 1, 'main_replace': 0, 'offline': 0, 'diary': 0, 'auto_distribution': 0})
 
         self.Vk.MessageSend(Config.CONSOLE, keyboard=Settings(), message='Меню настроек')

@@ -21,8 +21,9 @@ def MenuKeyboard():
     keyboard.add_button('Общее на сегодня', color=VkKeyboardColor.DEFAULT)
     keyboard.add_button('Общее на завтра', color=VkKeyboardColor.DEFAULT)
     keyboard.add_line()
+    keyboard.add_button('ГД', color=VkKeyboardColor.PRIMARY)
     keyboard.add_button('Звонки', color=VkKeyboardColor.PRIMARY)
-    keyboard.add_button('ДЗ', color=VkKeyboardColor.PRIMARY)
+    # keyboard.add_button('ДЗ', color=VkKeyboardColor.PRIMARY)
     keyboard.add_line()
     keyboard.add_button('Настройки', color=VkKeyboardColor.PRIMARY)
     return keyboard.get_keyboard()
@@ -53,18 +54,37 @@ def ChooseClassLetter(g_class):
     return keyboard.get_keyboard()
 
 
-def SettingsKeyboard(stat, parse_stat=0):
+def SettingsKeyboard(user_info):
     keyboard = VkKeyboard(one_time=False)
     keyboard.add_button('Сменить класс', color=VkKeyboardColor.DEFAULT)
     keyboard.add_line()
-    if stat == 1:
-        keyboard.add_button('Выключить уведомления', color=VkKeyboardColor.NEGATIVE)
-    elif stat == 0:
-        keyboard.add_button('Включить уведомления', color=VkKeyboardColor.POSITIVE)
-    if parse_stat == 1:
-        keyboard.add_button('Не отслеживать расписания', color=VkKeyboardColor.NEGATIVE)
-    elif parse_stat == 0:
-        keyboard.add_button('Отслеживать расписания', color=VkKeyboardColor.POSITIVE)
+
+    if user_info['7'] == 1:
+        keyboard.add_button('Вкл 7:00', color=VkKeyboardColor.POSITIVE)
+    elif user_info['7'] == 0:
+        keyboard.add_button('Выкл 7:00', color=VkKeyboardColor.NEGATIVE)
+
+    if user_info['13'] == 1:
+        keyboard.add_button('Вкл 13:00', color=VkKeyboardColor.POSITIVE)
+    elif user_info['13'] == 0:
+        keyboard.add_button('Выкл 13:00', color=VkKeyboardColor.NEGATIVE)
+
+    if user_info['17'] == 1:
+        keyboard.add_button('Вкл 17:00', color=VkKeyboardColor.POSITIVE)
+    elif user_info['17'] == 0:
+        keyboard.add_button('Выкл 17:00', color=VkKeyboardColor.NEGATIVE)
+
+    keyboard.add_line()
+    if user_info['20'] == 1:
+        keyboard.add_button('Вкл 20:00', color=VkKeyboardColor.POSITIVE)
+    elif user_info['20'] == 0:
+        keyboard.add_button('Выкл 20:00', color=VkKeyboardColor.NEGATIVE)
+
+    if user_info['23'] == 1:
+        keyboard.add_button('Вкл 23:00', color=VkKeyboardColor.POSITIVE)
+    elif user_info['23'] == 0:
+        keyboard.add_button('Выкл 23:00', color=VkKeyboardColor.NEGATIVE)
+
     keyboard.add_line()
     keyboard.add_button('Назад', color=VkKeyboardColor.PRIMARY)
     return keyboard.get_keyboard()

@@ -25,7 +25,7 @@ class Vk:
                                  attachment=attachment,
                                  keyboard=keyboard)
         if send_id < 2000000000:
-            UserBase().IncreaseParameters(send_id, messages_receive=True)
+            UserBase().IncreaseParameters(send_id, messages_received=True)
 
     def CheckOnline(self, user_id):
         info = self.VkApi.users.get(user_ids=user_id, fields=['online'])
@@ -47,6 +47,9 @@ class Vk:
         self.VkApi.messages.setActivity(type='typing',
                                         peer_id=peer_id,
                                         group_id=Config.GROUP_ID)
+
+    def SetOnline(self):
+        self.VkApi.groups.enableOnline(group_id=Config.GROUP_ID)
 
     def ManyMessagesSend(self, user_ids, message=None, attachment=None, keyboard=None):
         if len(user_ids) > 100:
