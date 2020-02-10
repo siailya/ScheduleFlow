@@ -23,7 +23,7 @@ def MenuKeyboard():
     keyboard.add_line()
     keyboard.add_button('ГД', color=VkKeyboardColor.PRIMARY)
     keyboard.add_button('Звонки', color=VkKeyboardColor.PRIMARY)
-    keyboard.add_button('ДЗ', color=VkKeyboardColor.PRIMARY)
+    # keyboard.add_button('ДЗ', color=VkKeyboardColor.PRIMARY)
     keyboard.add_line()
     keyboard.add_button('Настройки', color=VkKeyboardColor.PRIMARY)
     return keyboard.get_keyboard()

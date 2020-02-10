@@ -70,16 +70,20 @@ def SendAllTime(date, time):
 
 
 def NextDistributeWait(now):
-    if now.hour < 7:
-        return now.diff(pendulum.datetime(now.year, now.month, now.day, 7, 0, tz=TZ)).in_seconds(), 7
-    elif now.hour < 13:
-        return now.diff(pendulum.datetime(now.year, now.month, now.day, 13, 0, tz=TZ)).in_seconds(), 13
-    elif now.hour < 17:
-        return now.diff(pendulum.datetime(now.year, now.month, now.day, 17, 0, tz=TZ)).in_seconds(), 17
-    elif now.hour < 20:
-        return now.diff(pendulum.datetime(now.year, now.month, now.day, 20, 0, tz=TZ)).in_seconds(), 20
-    elif now.hour < 23:
-        return now.diff(pendulum.datetime(now.year, now.month, now.day, 23, 0, tz=TZ)).in_seconds(), 23
+    if now.weekday() != 6:
+        if now.hour < 7:
+            return now.diff(pendulum.datetime(now.year, now.month, now.day, 7, 0, tz=TZ)).in_seconds(), 7
+        elif now.hour < 13:
+            return now.diff(pendulum.datetime(now.year, now.month, now.day, 13, 0, tz=TZ)).in_seconds(), 13
+        elif now.hour < 17:
+            return now.diff(pendulum.datetime(now.year, now.month, now.day, 17, 0, tz=TZ)).in_seconds(), 17
+        elif now.hour < 20:
+            return now.diff(pendulum.datetime(now.year, now.month, now.day, 20, 0, tz=TZ)).in_seconds(), 20
+        elif now.hour < 23:
+            return now.diff(pendulum.datetime(now.year, now.month, now.day, 23, 0, tz=TZ)).in_seconds(), 23
+        else:
+            tm = now.add(days=1)
+            return now.diff(pendulum.datetime(tm.year, tm.month, tm.day, 7, 0, tz=TZ)).in_seconds(), 7
     else:
         tm = now.add(days=1)
         return now.diff(pendulum.datetime(tm.year, tm.month, tm.day, 7, 0, tz=TZ)).in_seconds(), 7

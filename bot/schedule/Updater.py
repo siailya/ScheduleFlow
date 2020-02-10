@@ -1,6 +1,8 @@
 from multiprocessing.dummy import Process
 from time import sleep
 
+import vk_api
+
 from bot.Api import Vk
 from bot.database.DataBases import SettingsBase
 from bot.schedule.Classes import *
@@ -69,6 +71,10 @@ def AutoUpdater():
     while True:
         schedule_date = GetScheduleDate(pendulum.now())
         Update = UpdateSchedule(schedule_date)
+        try:
+            Vk().SetOnline()
+        except vk_api.exceptions.ApiError:
+            pass
         try:
             if Update.CheckClassesUpdate() or Update.CheckMainUpdates():
                 if SettingsBase().GetSettings()['auto_update']:

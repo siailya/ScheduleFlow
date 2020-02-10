@@ -48,6 +48,9 @@ class Vk:
                                         peer_id=peer_id,
                                         group_id=Config.GROUP_ID)
 
+    def SetOnline(self):
+        self.VkApi.groups.enableOnline(group_id=Config.GROUP_ID)
+
     def ManyMessagesSend(self, user_ids, message=None, attachment=None, keyboard=None):
         if len(user_ids) > 100:
             for i in range(len(user_ids) // 100 + 1):

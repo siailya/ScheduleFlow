@@ -1,6 +1,7 @@
 from pendulum import *
 
 
+INIT_TIME = 0
 TZ = 'Europe/Moscow'
 FORMAT = 'DD.MM.YYYY'
 EXT_FORMAT = 'DD.MM.YYYY в HH:mm'

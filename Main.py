@@ -2,6 +2,7 @@ from multiprocessing import Process
 from sys import platform
 
 import requests
+import vk_api
 from vk_api.bot_longpoll import VkBotEventType
 import pendulum
 
@@ -12,6 +13,8 @@ from bot.schedule.DisrtibuteSchedule import AutoDistribution
 from bot.schedule.Updater import AutoUpdater
 from bot.stuff.Config import Config as Config
 from bot.stuff.Logging import GetMainLogger, GetCustomLogger
+from bot.stuff import Utilities
+from bot.stuff.Utilities import TZ
 
 Vk = Vk()
 Logger = GetMainLogger()
@@ -24,6 +27,8 @@ def MainBot():
     Logger.info('Старт прослушивания сервера!')
     print('LongPooling started!')
     Vk.ConsoleMessage(f'Бот запущен на платформе {platform}\nТекущая версия: {Config.VERSION}\nВремя: {pendulum.now()}')
+    Utilities.INIT_TIME = pendulum.now(TZ)
+
     while True:
         if not Config.DEBUGGING:
             try:

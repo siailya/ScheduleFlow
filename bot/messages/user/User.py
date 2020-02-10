@@ -71,6 +71,7 @@ class User:
     def Message(self, event):
         user_id = event.obj.message['peer_id']
         message = event.obj.message['text']
+        self.Vk.SetActivity(user_id)
 
         if message == 'raise':
             raise ValueError

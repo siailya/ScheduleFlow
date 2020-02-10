@@ -70,7 +70,9 @@ def ScheduleFlowInfo():
            f'Получено расписаний: {statistics["schedule_received"]}\n\n' \
            f'Отправлено сообщений: {statistics["msg_send"]}\n' \
            f'Получено сообщений: {statistics["msg_received"]}\n' \
-           f'Всего сообщений: {statistics["total_msg"]}'
+           f'Всего сообщений: {statistics["total_msg"]}\n\n' \
+           f'Запуск: {Utilities.INIT_TIME}\n' \
+           f'Uptime: {Utilities.INIT_TIME.diff(pendulum.now(TZ)).in_words(locale="ru")}'
 
 
 def Distribution():
@@ -132,7 +134,7 @@ class Console:
                 self.ConsoleBase.ChangeState(0)
                 if lowerText == 'да, выполнить':
                     if GetSchedule(ConsoleTemp.Date, 'main'):
-                        send_process = Process(target=SendAllClasses, args=(ConsoleTemp.Date, ))
+                        send_process = Process(target=SendAllClasses, args=(ConsoleTemp.Date,))
                         send_process.start()
                         self.Vk.ConsoleMessage(f'Рассылка расписания на {ConsoleTemp.Date} запущена!')
                     else:
@@ -219,6 +221,12 @@ class Console:
             cls, date = message.lower().lstrip('удалить дз').upper().replace(',', '').split(' ')
             HomeworkBase().DeleteHomework(date, cls)
             self.Vk.ConsoleMessage('ДЗ удалено!')
+        elif 'редирект' in message.lower():
+            date = message.lstrip('редирект на')
+            if date != 'сброс':
+                Config.REDIRECT_DATE = date
+            else:
+                Config.REDIRECT_DATE = 0
 
     def ScheduleUpdate(self, date):
         self.Vk.ConsoleMessage(f'Обновление расписания на {date}')
