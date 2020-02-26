@@ -63,7 +63,6 @@ def SendAllClasses(date=GetScheduleTomorrow()):
 
 
 def SendAllTime(date, time):
-    Vk().ConsoleMessage(f'Выполняется автоматическая рассылка расписания на {date}...')
     UpdateSchedule(date).UpdateAll()
     for i in Utilities.CLASSES:
         ClassTimeSend(i, date, time)

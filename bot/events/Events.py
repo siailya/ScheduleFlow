@@ -4,7 +4,10 @@ from bot.database.DataBases import UserBase
 
 class Comment:
     def __init__(self, event):
-        Vk().ConsoleMessage(f'✏ Коммент от @id{event.obj["from_id"]}({" ".join(list(Vk().UserNameGet(event.obj["from_id"])))}):\n{event.obj["text"]}')
+        try:
+            Vk().ConsoleMessage(f'✏ Коммент от @id{event.obj["from_id"]}({" ".join(list(Vk().UserNameGet(event.obj["from_id"])))}):\n{event.obj["text"]}')
+        except:
+            pass
 
 
 class MessagesDeny:
