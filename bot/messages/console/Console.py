@@ -53,12 +53,10 @@ def UserInfo(info):
     if info:
         return f'Информация о пользователе @id{info["id"]}({info["name"]} {info["last"]}):\n' \
                f'Класс: {info["cls"]}\n' \
-               f'Уведомления: {"включены" if info["notifications"] == 1 else "выключены"}\n' \
                f'Запросов: {info["requests"]}\n' \
-               f'Благодарностей: {info["gratitudes"]}\n' \
                f'Получено расписаний: {info["received"]}\n' \
-               f'Отправлено сообщений: {info["messages_send"]}\n' \
-               f'Получено сообщений: {info["messages_receive"]}'
+               f'Отправлено сообщений: {info["msg_send"]}\n' \
+               f'Получено сообщений: {info["msg_received"]}'
     return 'Пользователь не найден в базе!'
 
 
@@ -146,12 +144,12 @@ class Console:
         if message.replace('@', '') == Config.PREFIX + 'настройки':
             self.Vk.MessageSend(Config.CONSOLE, keyboard=Settings(), message='Меню настроек')
             self.ConsoleBase.ChangeState(1)
-        elif message.replace('@', '') == Config.PREFIX + 'статистика':
+        elif 'статистика' in message.lower():
             self.Vk.ConsoleMessage(ScheduleFlowInfo())
-        elif message.replace('@', '') == Config.PREFIX + 'обновить на сегодня':
+        elif 'обновить на сегодня' in message.lower():
             date = GetTodayDate()
             self.ScheduleUpdate(date)
-        elif message.replace('@', '') == Config.PREFIX + 'обновить на завтра':
+        elif 'обновить на завтра' in message.lower():
             date = GetScheduleTomorrow(pendulum.tomorrow(TZ))
             self.ScheduleUpdate(date)
         elif message.replace('@', '') == Config.PREFIX + 'проверить наличие':
@@ -199,7 +197,7 @@ class Console:
                 info = self.UserBase.GetUserInfoByName(name, last)
                 self.Vk.ConsoleMessage(UserInfo(info))
         elif message[:6] == 'замена':
-            replace_date = message[7:].lstrip('общим на ')
+            replace_date = message[7:].replace('общим на ', '')
             ScheduleBase().Replace(replace_date)
             self.Vk.ConsoleMessage(f'Замена общим на {replace_date} активирована!')
         elif message[:13] == 'отмена замены':
@@ -227,6 +225,8 @@ class Console:
                 Config.REDIRECT_DATE = date
             else:
                 Config.REDIRECT_DATE = 0
+        elif 'sql' in message:
+            self.Vk.ConsoleMessage(f'{self.UserBase.SQL(message[4:])}')
 
     def ScheduleUpdate(self, date):
         self.Vk.ConsoleMessage(f'Обновление расписания на {date}')

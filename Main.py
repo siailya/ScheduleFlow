@@ -59,6 +59,7 @@ def MainBot():
                 ExceptionLogger.warning('LongPool is restarted')
         else:
             for event in Vk.LongPool.listen():
+                print(event)
                 if event.type == VkBotEventType.MESSAGE_NEW:
                     NewMessage(event)
 
