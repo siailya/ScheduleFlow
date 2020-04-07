@@ -1,5 +1,5 @@
-from bot.database.DataBases import ScheduleBase
 from bot.Api import Vk
+from bot.database.DataBases import ScheduleBase
 
 
 def UploadSchedule(path_to_schedule, date, cls):

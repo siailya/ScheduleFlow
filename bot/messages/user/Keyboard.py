@@ -1,5 +1,7 @@
 from vk_api.keyboard import VkKeyboardColor, VkKeyboard
 
+from bot.stuff.Config import Config
+
 
 def StartKeyboard():
     keyboard = VkKeyboard(one_time=True)
@@ -14,6 +16,8 @@ def DenyKeyboard():
 
 
 def MenuKeyboard():
+    if Config.STATIC:
+        return StayHomeKeyboard()
     keyboard = VkKeyboard(one_time=False)
     keyboard.add_button('На сегодня', color=VkKeyboardColor.PRIMARY)
     keyboard.add_button('На завтра', color=VkKeyboardColor.PRIMARY)
@@ -99,4 +103,21 @@ def HomeworkKeyboard():
     keyboard.add_button('Пожаловаться', color=VkKeyboardColor.NEGATIVE)
     keyboard.add_button('Указать дату', color=VkKeyboardColor.PRIMARY)
     keyboard.add_button('Выход', color=VkKeyboardColor.NEGATIVE)
+    return keyboard.get_keyboard()
+
+
+def StayHomeKeyboard():
+    keyboard = VkKeyboard(one_time=False)
+    keyboard.add_button('На сегодня', color=VkKeyboardColor.PRIMARY)
+    keyboard.add_button('На завтра', color=VkKeyboardColor.PRIMARY)
+    keyboard.add_line()
+    keyboard.add_button('Онлайн на сегодня', color=VkKeyboardColor.DEFAULT)
+    keyboard.add_button('Онлайн на завтра', color=VkKeyboardColor.DEFAULT)
+    keyboard.add_line()
+    keyboard.add_button('Общее на сегодня', color=VkKeyboardColor.DEFAULT)
+    keyboard.add_button('Общее на завтра', color=VkKeyboardColor.DEFAULT)
+    keyboard.add_line()
+    keyboard.add_button('ГД', color=VkKeyboardColor.PRIMARY)
+    keyboard.add_line()
+    keyboard.add_button('Настройки', color=VkKeyboardColor.PRIMARY)
     return keyboard.get_keyboard()

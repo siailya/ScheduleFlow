@@ -1,10 +1,8 @@
-import os
-from os import path
 from sys import platform
 
 
 class Config:
-    VERSION = '1.8'
+    VERSION = '1.9.5'
 
     TESTING = False
     DEBUGGING = False
@@ -13,9 +11,10 @@ class Config:
     else:
         PATH = '/root/ScheduleFlow/'
     UPDATE_INTERVAL = 15
-    SCHEDULE_LINK = 'https://амтэк35.рф/wp-content/uploads/'  # date.png
+    SCHEDULE_LINK = 'https://амтэк35.рф/wp-content/uploads/'
     PARSE_INTERVAL = 30
-    REDIRECT_DATE = '13.01.2020'
+    REDIRECT_DATE = 0
+    STATIC = True
 
     ADMINS = [223632391, 222383631, 66061219]
     if TESTING:

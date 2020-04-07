@@ -96,7 +96,7 @@ def DateWatermark(image, date):
     width, height = image.size
     draw = ImageDraw.Draw(image)
     font = ImageFont.truetype(Config.PATH + 'bot/stuff/font.ttf', 20)
-    update_text = f'Расписание на {date}'
+    update_text = f'{date}'
     text_width, text_height = draw.textsize(update_text, font=font)
     draw.text(((width - text_width) / 2, height - 40), update_text, fill='black', font=font)
     return image

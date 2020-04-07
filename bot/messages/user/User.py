@@ -77,7 +77,7 @@ class User:
             raise ValueError
         if message == 'beginning':
             self.Users.SetUserParameters(user_id, state=0)
-            self.Vk.MessageSend(user_id, 'Главное меню', keyboard=Keyboard.MenuKeyboard())
+            self.Vk.MessageSend(user_id, 'Главное меню', keyboard=Keyboard.StayHomeKeyboard())
 
         if (not self.Users.CheckUserInBase(user_id)) or (self.Users.GetUserState(user_id) in [1, 2]):
             self.UserRegister(event)
@@ -143,7 +143,44 @@ class User:
         user_id = event.obj.message['peer_id']
         message = event.obj.message['text']
         user_info = self.Users.GetUserInfo(user_id)
-        if message.lower() == 'на сегодня':
+        if message.lower() == 'онлайн на сегодня':
+            self.req = True
+            self.UserLogger.info(f'Запрошено онлайн распсиание на сегодня')
+            cls = user_info['cls']
+            date = GetTodayDate()
+
+            if ScheduleBase().GetReplace(date):
+                cls = 'main'
+
+            schedule = GetSchedule(date, cls)
+            if schedule:
+                self.rec = True
+                self.UserLogger.info(f'Расписание отправлено')
+                self.Vk.MessageSend(user_id, Answers.GIVE_TODAY_ONLINE, attachment=schedule)
+            else:
+                self.UserLogger.info(f'Расписание не отправлено')
+                self.Vk.MessageSend(user_id, Answers.TODAY_NONE)
+        elif message.lower() == 'онлайн на завтра':
+            self.req = True
+            self.UserLogger.info(f'Запрошено онлайн распсиание на завтра')
+            cls = user_info['cls']
+            date = GetScheduleTomorrow(pendulum.tomorrow(TZ))
+
+            if ScheduleBase().GetReplace(date):
+                cls = 'main'
+            schedule = GetSchedule(date, cls)
+            if schedule:
+                self.rec = True
+                self.UserLogger.info(f'Расписание отправлено')
+                if pendulum.today(tz=Utilities.TZ).weekday() == 5:
+                    self.Vk.MessageSend(user_id, Answers.GIVE_MONDAY, attachment=schedule)
+                else:
+                    self.Vk.MessageSend(user_id, Answers.GIVE_TOMORROW_ONLINE, attachment=schedule)
+            else:
+                self.UserLogger.info(f'Расписание не отправлено')
+                self.Vk.MessageSend(user_id, Answers.TOMORROW_NONE)
+
+        elif message.lower() == 'на сегодня':
             self.req = True
             self.UserLogger.info(f'Запрошено распсиание на сегодня')
             cls = user_info['cls']
@@ -152,7 +189,7 @@ class User:
             if ScheduleBase().GetReplace(date):
                 cls = 'main'
 
-            schedule = GetSchedule(date, cls)
+            schedule = GetSchedule(date, cls, static=True)
             if schedule:
                 self.rec = True
                 self.UserLogger.info(f'Расписание отправлено')
@@ -168,7 +205,7 @@ class User:
 
             if ScheduleBase().GetReplace(date):
                 cls = 'main'
-            schedule = GetSchedule(date, cls)
+            schedule = GetSchedule(date, cls, static=True)
             if schedule:
                 self.rec = True
                 self.UserLogger.info(f'Расписание отправлено')
@@ -250,7 +287,7 @@ class User:
                 else:
                     self.UserLogger.info(f'Распсиание не найдено')
                     self.Vk.MessageSend(user_id, f'Прости, но расписания на {date} нигде нет\nИспользуй команду "Инфо <дата>" для подробностей')
-            elif 'homework' in answer:
+            elif 'homework' in answer and False:
                 date = Utilities.GetFormat(answer.replace('today', GetTodayDate()).replace('homework ', ''))
                 self.UserLogger.info(f'Запрошено ДЗ на {date}')
                 self.Vk.MessageSend(user_id, f'Домашнее задание {user_info["cls"]} класса на {date}:\n' + HomeworkBase().GetHomework(date, user_info["cls"]))

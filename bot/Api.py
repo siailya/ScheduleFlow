@@ -9,6 +9,7 @@ from vk_api.longpoll import VkLongPoll
 from vk_api.utils import get_random_id
 
 from bot.database.DataBases import UserBase
+from bot.messages.user.Keyboard import StayHomeKeyboard
 from bot.stuff.Config import Config as Config
 
 

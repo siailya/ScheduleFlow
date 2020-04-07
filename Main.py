@@ -71,4 +71,4 @@ if __name__ == '__main__':
     print('Initialization...')
     ListenProcess.start()
     UpdateProcess.start()
-    DistributeProcess.start()
+    # DistributeProcess.start()

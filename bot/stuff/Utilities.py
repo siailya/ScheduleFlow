@@ -1,6 +1,5 @@
 from pendulum import *
 
-
 INIT_TIME = 0
 TZ = 'Europe/Moscow'
 FORMAT = 'DD.MM.YYYY'
@@ -38,6 +37,13 @@ GD = {'5А': 'https://drive.google.com/open?id=0B7EhlYtylzDbRmRVdk1HX2lOT1U',
       '11В': 'https://drive.google.com/open?id=0B50-jDbZypbpbTRJQkJzbHlMRUE',
       '11Г': 'https://drive.google.com/open?id=1CTP04pWS4PPcC-zY7P4nIPpQFphpCsyc',
       'main': 'https://drive.google.com/open?id=0B50-jDbZypbpYVhBcW04NnhwZk0'}
+STATIC = {0: '01_Понедельник',
+          1: '02_Вторник',
+          2: '03_Среда',
+          3: '04_Четверг',
+          4: '05_Пятница',
+          5: '06_Суббота'
+          }
 
 
 def GetFormat(dialogflow_date: str):
@@ -55,6 +61,3 @@ def ToPrint(msg):
     if (msg in commands) or ('расписание на' in msg) or (msg in '567891011абвг'):
         return False
     return True
-
-
-

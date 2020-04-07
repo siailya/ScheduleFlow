@@ -1,14 +1,15 @@
-import pendulum
-
+from datetime import datetime
 from os import path
 from time import sleep
 
+import pendulum
+
+from bot.database.DataBases import ScheduleBase, SettingsBase
 from bot.schedule.FromSite import DownloadScheduleFromSite, CheckAvailabilityOnSite
 from bot.schedule.Updater import UpdateSchedule
 from bot.schedule.Upload import UploadSchedule
-from bot.stuff.Config import Config
 from bot.stuff import Utilities
-from bot.database.DataBases import ScheduleBase, SettingsBase
+from bot.stuff.Config import Config
 
 
 def CheckSchedule(schedule_date, cls='main'):
@@ -26,10 +27,14 @@ def CheckSchedule(schedule_date, cls='main'):
     return False
 
 
-def GetSchedule(schedule_date, cls='main'):
+def GetSchedule(schedule_date, cls='main', static=False):
+    SB = ScheduleBase()
+    if Config.STATIC and static:
+        if datetime.strptime(schedule_date, '%d.%m.%Y').weekday() != 6:
+            return SB.GetAttachment(Utilities.STATIC[datetime.strptime(schedule_date, '%d.%m.%Y').weekday()], cls)
+        return None
     if SettingsBase().GetSettings(schedule_date)['main_replace'] == 1:
         cls = 'main'
-    SB = ScheduleBase()
     if CheckSchedule(schedule_date, cls):
         if SB.GetAttachment(schedule_date, cls):
             return SB.GetAttachment(schedule_date, cls)
@@ -70,8 +75,3 @@ def ScheduleInfo(schedule_date, cls='main'):
         else:
             info += 'Обновлено: -'
     return info
-
-
-if __name__ == '__main__':
-    CheckSchedule('29.12.2019')
-
